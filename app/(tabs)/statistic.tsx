@@ -1,109 +1,180 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import * as Progress from "react-native-progress";
+import { BarChart } from "react-native-chart-kit";
+import Svg, { Rect } from "react-native-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const StatisticsScreen = () => {
+  const totalShots = 2067;
+  const totalMissed = 98;
+  const accuracy = (totalShots / (totalShots + totalMissed)) * 100;
 
-export default function TabTwoScreen() {
+  const commonShotsData = {
+    labels: ["Drive", "Dink", "Drop", "Serve"],
+    datasets: [
+      {
+        data: [15000, 3000, 12000, 7000], // Dummy data for shots hit
+      },
+    ],
+  };
+
+  const heatmapData = [
+    [1, -2, 3, -4],
+    [-1, 2, -3, 4],
+    [3, -1, -2, 1],
+    [-4, 3, -1, 2],
+  ]; // Example intensity values for the heatmap
+
+  const generateHeatmapColors = (value: number) => {
+    if (value > 0) return "rgba(0, 199, 129," + Math.abs(value / 4) + ")";
+    else return "rgba(255,82,82," + Math.abs(value / 4) + ")";
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Player Statistics</Text>
+      </View>ß
+      <ScrollView style={styles.container}>
+
+        {/* Total Shots Section */}
+        <View style={styles.totalShotsContainer}>
+          <Text style={styles.totalShotsText}>Total Shots Hit</Text>
+          <Text style={styles.totalShotsNumber}>{totalShots}</Text>
+          <Text style={styles.totalShotsText}>Total Shots Missed</Text>
+          <Text style={styles.totalShotsNumber}>{totalMissed}</Text>
+          <Progress.Bar
+            progress={accuracy / 100}
+            width={Dimensions.get("window").width * 0.8}
+            color="#00C781"
+            unfilledColor="#ddd"
+            borderWidth={0}
+            height={10}
+            style={{ marginVertical: 10 }}
+          />
+          <Text style={styles.progressBarLabel}>
+            {accuracy.toFixed(1)}% Accuracy
+          </Text>
+        </View>
+
+        {/* Common Shots Section */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.sectionTitle}>Common Shots</Text>
+          <BarChart
+            data={{
+              labels: ["Drive", "Dink", "Drop", "Serve"], // X-axis labels
+              datasets: [
+                {
+                  data: [15000, 3000, 12000, 7000], // Y-axis data
+                },
+              ],
+            }}
+            width={Dimensions.get("window").width - 40} // Chart width
+            height={220} // Chart height
+            yAxisLabel="" // Prefix for Y-axis labels (e.g., "$")
+            yAxisSuffix="" // Suffix for Y-axis labels (e.g., "k")
+            chartConfig={{
+              backgroundColor: "#F4F9F9",
+              backgroundGradientFrom: "#F4F9F9",
+              backgroundGradientTo: "#F4F9F9",
+              decimalPlaces: 0, // Number of decimal places in Y-axis values
+              color: (opacity = 1) => `rgba(0,199,129,${opacity})`, // Bar color
+              labelColor: (opacity = 1) => `rgba(51,51,51,${opacity})`, // Label color
+              barPercentage: 0.5,
+            }}
+            style={{
+              marginVertical: 8,
+              borderRadius: 8,
+            }}
+          />
+        </View>
+
+        {/* Heatmap Section */}
+        <View style={styles.heatmapContainer}>
+          <Text style={styles.sectionTitle}>Heat Map</Text>
+          <Svg
+            height="200"
+            width={Dimensions.get("window").width - 40}
+            viewBox="0 0 100 100"
+          >
+            {heatmapData.map((row, rowIndex) =>
+              row.map((value, colIndex) => (
+                <Rect
+                  key={`${rowIndex}-${colIndex}`}
+                  x={(colIndex * 25).toString()}
+                  y={(rowIndex * 25).toString()}
+                  width="25"
+                  height="25"
+                  fill={generateHeatmapColors(value)}
+                />
+              ))
+            )}
+          </Svg>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: "#F4F9F9",
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#00C781",
   },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+  },
+  totalShotsContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+    backgroundColor: "#D1F5F0",
+    paddingVertical: 20,
+    borderRadius: 10,
+  },
+  totalShotsText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+  },
+  totalShotsNumber: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#00C781",
+    marginBottom: 10,
+  },
+   progressBarLabel:{
+   fontSize:16 ,color:"#333" 
+  },
+  chartContainer:{
+  marginBottom: 20,
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  },
+  sectionTitle:{
+  fontSize: 20, fontWeight:"bold",color:"#333",marginBottom: 10
+
+  },
+  barChart:{
+  borderRadius: 8 
+
+  },
+  heatmapContainer:{
+  alignItems:"center", marginBottom: 30
+
+  }
+
 });
+
+export default StatisticsScreen;
