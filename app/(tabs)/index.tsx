@@ -10,12 +10,6 @@ import {
 const HomeScreen = ({ navigation }: { navigation: any }) => {
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Home</Text>
-      </View>
-
-
       {/* Summary Section */}
       <View style={styles.card}>
         <Text style={styles.title}>Game History</Text>
