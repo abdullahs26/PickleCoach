@@ -6,39 +6,42 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = ({ navigation }: { navigation: any }) => {
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Summary Section */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Game History</Text>
-        <Text style={styles.stat}>Total Games Played: 591</Text>
-      </View>
+      <ScrollView>
+        <View style={styles.card}>
+          <Text style={styles.title}>Game History</Text>
+          <Text style={styles.stat}>Total Games Played: 591</Text>
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>Player Statistics</Text>
-        <Text style={styles.stat}>Total Shots Hit: 2067</Text>
-        <Text style={styles.stat}>Total Shots Missed: 98</Text>
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.title}>Player Statistics</Text>
+          <Text style={styles.stat}>Total Shots Hit: 2067</Text>
+          <Text style={styles.stat}>Total Shots Missed: 98</Text>
+        </View>
 
-      {/* Most Recent Session */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Most Recent Session</Text>
-        <Text>Date: April 28, 2024</Text>
-        <Text>Location: Waterloo, ON</Text>
-        <Text>Accuracy: 77%</Text>
-        <Text>Total Shots: 161</Text>
-      </View>
+        {/* Most Recent Session */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Most Recent Session</Text>
+          <Text>Date: April 28, 2024</Text>
+          <Text>Location: Waterloo, ON</Text>
+          <Text>Accuracy: 77%</Text>
+          <Text>Total Shots: 161</Text>
+        </View>
 
-      {/* Start Session Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Session")}
-      >
-        <Text style={styles.buttonText}>Start Session</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Start Session Button */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Session")}
+        >
+          <Text style={styles.buttonText}>Start Session</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
