@@ -71,7 +71,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
             </TouchableOpacity>
           </>
         ) : (
-          <Text>Please Connect to a Heart Rate Monitor</Text>
+          <Text>Please Connect to to the Paddle</Text>
         )}
         <TouchableOpacity
           onPress={connectedDevice ? disconnectFromDevice : openModal}
