@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
   View,
   Text,
@@ -17,10 +17,10 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       allDevices,
       connectToDevice,
       connectedDevice,
-      heartRate,
       disconnectFromDevice,
     } = useBLE();
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+    const [isDeviceConnected, setIsDeviceConnected] = useState<boolean>(false);
 
     const scanForDevices = async () => {
       const isPermissionsEnabled = await requestPermissions();
@@ -37,11 +37,31 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       scanForDevices();
       setIsModalVisible(true);
     };
+
+    useEffect(() => {
+      console.log("in the effect")
+      if (connectedDevice) {
+        setIsDeviceConnected(true);
+        setTimeout (() => {
+            setIsDeviceConnected(false);
+          }, 10000)  
+      }
+    }, [connectedDevice])
+  
+  if (isDeviceConnected) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.header}>
+          Please keep the paddle down for 10 secs
+        </Text>
+      </SafeAreaView>
+    );
+  }  
   return (
     <SafeAreaView style={styles.container}>
       {/* Summary Section */}
       <ScrollView>
-        {connectedDevice ? (
+        {(connectedDevice && !isDeviceConnected) ? (
           <>
             <View style={styles.card}>
               <Text style={styles.title}>Game History</Text>
