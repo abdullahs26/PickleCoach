@@ -33,7 +33,12 @@ interface BluetoothLowEnergyApi {
   disconnectFromDevice: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
-  heartRate: number;
+  xGyroCoordinateData: number[];
+  yGyroCoordinateData: number[];
+  zGyroCoordinateData: number[];
+  xAccelCoordinateData: number[];
+  yAccelCoordinateData: number[];
+  zAccelCoordinateData: number[];
 }
 
 function hexToDouble(hexStr: string): number {
@@ -103,7 +108,12 @@ function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [heartRate, setHeartRate] = useState<number>(0);
+  const [xGyroCoordinateData, setXGyroCoordinateData] = useState<number[]>([]);
+  const [yGyroCoordinateData, setYGyroCoordinateData] = useState<number[]>([]);
+  const [zGyroCoordinateData, setZGyroCoordinateData] = useState<number[]>([]);
+  const [xAccelCoordinateData, setXAccelCoordinateData] = useState<number[]>([]);
+  const [yAccelCoordinateData, setYAccelCoordinateData] = useState<number[]>([]);
+  const [zAccelCoordinateData, setZAccelCoordinateData] = useState<number[]>([]);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -169,7 +179,7 @@ function useBLE(): BluetoothLowEnergyApi {
       if (error) {
         console.log(error);
       }
-      if (device && device.name?.includes("PICO")) {
+      if (device && device.name?.includes("Pico")) {
         setAllDevices((prevState: Device[]) => {
           if (!isDuplicteDevice(prevState, device)) {
             return [...prevState, device];
@@ -196,39 +206,73 @@ function useBLE(): BluetoothLowEnergyApi {
     if (connectedDevice) {
       bleManager.cancelDeviceConnection(connectedDevice.id);
       setConnectedDevice(null);
-      setHeartRate(0);
+      setXGyroCoordinateData([]);
+      setYGyroCoordinateData([]);
+      setZGyroCoordinateData([]);
+      setXAccelCoordinateData([]);
+      setYAccelCoordinateData([]);
+      setZAccelCoordinateData([]);
     }
   };
 
-  const onAccelUpdate = (
+  const onPaddleUpdate = (
     error: BleError | null,
-    characteristic: Characteristic | null
+    characteristic: Characteristic | null,
   ) => {
-    if (error) {
-      console.log(error);
-      return -1;
-    } else if (!characteristic?.value) {
-      console.log("No Data was recieved");
-      return -1;
-    }
-    console.log("HEjjlo accel")
-    const hex = base64ToBigEndianHex(characteristic.value);
+      if (error) {
+        console.log(error);
+        return -1;
+      } else if (!characteristic?.value) {
+        console.log("No Data was recieved");
+        return -1;
+      }
+      console.log("HEjjlo accel");
+      const hex = base64ToBigEndianHex(characteristic.value);
       console.log(parseFloat(hex));
+      return parseFloat(hex);
+  }
+
+  const onAccelUpdateX = (
+    error: BleError | null,
+    characteristic: Characteristic | null,
+  ) => {
+    let xCoordData = onPaddleUpdate(error, characteristic)
+    setXAccelCoordinateData([...xAccelCoordinateData, xCoordData]);
   };
-  const onGyroUpdate = (
+  const onAccelUpdateY = (
     error: BleError | null,
     characteristic: Characteristic | null
   ) => {
-    if (error) {
-      console.log(error);
-      return -1;
-    } else if (!characteristic?.value) {
-      console.log("No Data was recieved");
-      return -1;
-    }
-    console.log("HEjjlo gyro");
-    const hex = base64ToBigEndianHex(characteristic.value);
-    console.log(parseFloat(hex));
+    let yCoordData = onPaddleUpdate(error, characteristic);
+    setYAccelCoordinateData([...yAccelCoordinateData, yCoordData]);
+  };
+  const onAccelUpdateZ = (
+    error: BleError | null,
+    characteristic: Characteristic | null
+  ) => {
+    let zCoordData = onPaddleUpdate(error, characteristic);
+    setZAccelCoordinateData([...yAccelCoordinateData, zCoordData]);
+  };
+  const onGyroUpdateX = (
+    error: BleError | null,
+    characteristic: Characteristic | null,
+  ) => {
+    let xCoordData = onPaddleUpdate(error, characteristic);
+    setXGyroCoordinateData([...xGyroCoordinateData, xCoordData]);
+  };
+  const onGyroUpdateY = (
+    error: BleError | null,
+    characteristic: Characteristic | null
+  ) => {
+    let yCoordData = onPaddleUpdate(error, characteristic);
+    setYGyroCoordinateData([...yGyroCoordinateData, yCoordData]);
+  };
+  const onGyroUpdateZ = (
+    error: BleError | null,
+    characteristic: Characteristic | null
+  ) => {
+    let zCoordData = onPaddleUpdate(error, characteristic);
+    setZGyroCoordinateData([...zGyroCoordinateData, zCoordData]);
   };
   const onMicUpdate = (
     error: BleError | null,
@@ -271,35 +315,35 @@ function useBLE(): BluetoothLowEnergyApi {
   const startStreamingData = async (device: Device) => {
     if (device) {
       console.log("hello from montor")
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.ACCEL_X,
-      //   onAccelUpdate
-      // );
+      device.monitorCharacteristicForService(
+        PADDLE_UUID,
+        characteristic_map.ACCEL_X,
+        onAccelUpdateX
+      );
       // device.monitorCharacteristicForService(
       //   PADDLE_UUID,
       //   characteristic_map.ACCEL_Y,
-      //   onAccelUpdate
+      //   onAccelUpdateY
       // );
       // device.monitorCharacteristicForService(
       //   PADDLE_UUID,
       //   characteristic_map.ACCEL_Z,
-      //   onAccelUpdate
+      //   onAccelUpdateZ
       // );
       // device.monitorCharacteristicForService(
       //   PADDLE_UUID,
       //   characteristic_map.GYRO_X,
-      //   onGyroUpdate
+      //   onGyroUpdateX
       // );
       // device.monitorCharacteristicForService(
       //   PADDLE_UUID,
       //   characteristic_map.GYRO_Y,
-      //   onGyroUpdate
+      //   onGyroUpdateY
       // );
       // device.monitorCharacteristicForService(
       //   PADDLE_UUID,
       //   characteristic_map.GYRO_Z,
-      //   onGyroUpdate
+      //   onGyroUpdateZ
       // );
       device.monitorCharacteristicForService(
         PADDLE_UUID,
@@ -342,7 +386,12 @@ function useBLE(): BluetoothLowEnergyApi {
     allDevices,
     connectedDevice,
     disconnectFromDevice,
-    heartRate,
+    xAccelCoordinateData,
+    yAccelCoordinateData,
+    zAccelCoordinateData,
+    xGyroCoordinateData,
+    yGyroCoordinateData,
+    zGyroCoordinateData
   };
 }
 

@@ -5,7 +5,16 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Dimensions
 } from "react-native";
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart,
+} from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DeviceModal from "../deviceConnectionModal";
 import useBLE from "../helper/useBLE";
@@ -18,6 +27,12 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       connectToDevice,
       connectedDevice,
       disconnectFromDevice,
+      xAccelCoordinateData,
+      xGyroCoordinateData,
+      yAccelCoordinateData,
+      yGyroCoordinateData,
+      zAccelCoordinateData,
+      zGyroCoordinateData
     } = useBLE();
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [isDeviceConnected, setIsDeviceConnected] = useState<boolean>(false);
@@ -61,7 +76,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       {/* Summary Section */}
       <ScrollView>
-        {(connectedDevice && !isDeviceConnected) ? (
+        {connectedDevice && !isDeviceConnected ? (
           <>
             <View style={styles.card}>
               <Text style={styles.title}>Game History</Text>
@@ -80,6 +95,94 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
               <Text>Location: Waterloo, ON</Text>
               <Text>Accuracy: 77%</Text>
               <Text>Total Shots: 161</Text>
+            </View>
+
+            <View>
+              <Text>Bezier Line Chart</Text>
+              <LineChart
+                data={{
+                  labels: [],
+                  datasets: [
+                    {
+                      data: xAccelCoordinateData,
+                      color: () => "#C7EBFF",
+                    },
+                    { data: yAccelCoordinateData, color: () => "#ED7C33" },
+                    { data: zAccelCoordinateData, color: () => "#96ed33" },
+                  ],
+                }}
+                width={Dimensions.get("window").width} // from react-native
+                height={220}
+                yAxisLabel="$"
+                yAxisSuffix="k"
+                yAxisInterval={1} // optional, defaults to 1
+                chartConfig={{
+                  backgroundColor: "#e26a00",
+                  backgroundGradientFrom: "#fb8c00",
+                  backgroundGradientTo: "#ffa726",
+                  decimalPlaces: 2, // optional, defaults to 2dp
+                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  labelColor: (opacity = 1) =>
+                    `rgba(255, 255, 255, ${opacity})`,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: "6",
+                    strokeWidth: "2",
+                    stroke: "#ffa726",
+                  },
+                }}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+              />
+            </View>
+
+            <View>
+              <Text>Bezier Line Chart</Text>
+              <LineChart
+                data={{
+                  labels: [],
+                  datasets: [
+                    {
+                      data: xGyroCoordinateData,
+                      color: () => "#C7EBFF",
+                    },
+                    { data: yGyroCoordinateData, color: () => "#ED7C33" },
+                    { data: zGyroCoordinateData, color: () => "#96ed33" },
+                  ],
+                }}
+                width={Dimensions.get("window").width} // from react-native
+                height={220}
+                yAxisLabel="$"
+                yAxisSuffix="k"
+                yAxisInterval={1} // optional, defaults to 1
+                chartConfig={{
+                  backgroundColor: "#e26a00",
+                  backgroundGradientFrom: "#fb8c00",
+                  backgroundGradientTo: "#ffa726",
+                  decimalPlaces: 2, // optional, defaults to 2dp
+                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  labelColor: (opacity = 1) =>
+                    `rgba(255, 255, 255, ${opacity})`,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: "6",
+                    strokeWidth: "2",
+                    stroke: "#ffa726",
+                  },
+                }}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+              />
             </View>
 
             {/* Start Session Button */}
