@@ -36,7 +36,7 @@ const StatisticsScreen = () => {
       {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Player Statistics</Text>
-      </View>ß
+      </View>
       <ScrollView style={styles.container}>
 
         {/* Total Shots Section */}

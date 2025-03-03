@@ -51,6 +51,39 @@ const data: gameHistory[] = [
     ],
   },
   {
+    month: "April",
+    games: [
+      {
+        date: "April 30, 2024",
+        location: "Waterloo, ON",
+        time: "18:27",
+        accuracy: "87%",
+        shots: 161,
+      },
+      {
+        date: "April 28, 2024",
+        location: "Waterloo, ON",
+        time: "12:27",
+        accuracy: "76%",
+        shots: 121,
+      },
+      {
+        date: "April 28, 2024",
+        location: "Waterloo, ON",
+        time: "12:27",
+        accuracy: "76%",
+        shots: 121,
+      },
+      {
+        date: "April 28, 2024",
+        location: "Waterloo, ON",
+        time: "12:27",
+        accuracy: "76%",
+        shots: 121,
+      },
+    ],
+  },
+  {
     month: "March",
     games: [
       {
@@ -98,7 +131,6 @@ const GameHistoryScreen = () => {
         <Text style={styles.totalGamesText}>Total Games Played</Text>
         <Text style={styles.totalGamesNumber}>591</Text>
       </View>
-
       <ScrollView>
         {data.map((section, index) => (
           <View key={index}>
@@ -107,6 +139,7 @@ const GameHistoryScreen = () => {
               data={section.games}
               renderItem={renderGameItem}
               keyExtractor={(item, idx) => `${section.month}-${idx}`}
+              scrollEnabled={false}
             />
           </View>
         ))}
