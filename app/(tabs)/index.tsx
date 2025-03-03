@@ -16,8 +16,9 @@ import {
   StackedBarChart,
 } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
-import DeviceModal from "../deviceConnectionModal";
+import DeviceModal from "../modal/deviceConnectionModal";
 import useBLE from "../helper/useBLE";
+import SessionModal from "../modal/sessionModal";
 
 const HomeScreen = ({ navigation }: { navigation: any }) => {
     const {
@@ -76,27 +77,28 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       {/* Summary Section */}
       <ScrollView>
-        {connectedDevice && !isDeviceConnected ? (
-          <>
-            <View style={styles.card}>
-              <Text style={styles.title}>Game History</Text>
-              <Text style={styles.stat}>Total Games Played: 591</Text>
-            </View>
+        <View style={styles.card}>
+          <Text style={styles.title}>Game History</Text>
+          <Text style={styles.stat}>Total Games Played: 591</Text>
+        </View>
 
-            <View style={styles.card}>
-              <Text style={styles.title}>Player Statistics</Text>
-              <Text style={styles.stat}>Total Shots Hit: 2067</Text>
-              <Text style={styles.stat}>Total Shots Missed: 98</Text>
-            </View>
-            {/* Most Recent Session */}
-            <View style={styles.card}>
-              <Text style={styles.title}>Most Recent Session</Text>
-              <Text>Date: April 28, 2024</Text>
-              <Text>Location: Waterloo, ON</Text>
-              <Text>Accuracy: 77%</Text>
-              <Text>Total Shots: 161</Text>
-            </View>
+        <View style={styles.card}>
+          <Text style={styles.title}>Player Statistics</Text>
+          <Text style={styles.stat}>Total Shots Hit: 2067</Text>
+          <Text style={styles.stat}>Total Shots Missed: 98</Text>
+        </View>
+        {/* Most Recent Session */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Most Recent Session</Text>
+          <Text>Date: April 28, 2024</Text>
+          <Text>Location: Waterloo, ON</Text>
+          <Text>Accuracy: 77%</Text>
+          <Text>Total Shots: 161</Text>
+        </View>
 
+        {xAccelCoordinateData.length !== 0 &&
+          yAccelCoordinateData.length !== 0 &&
+          zAccelCoordinateData.length !== 0 && (
             <View>
               <Text>Bezier Line Chart</Text>
               <LineChart
@@ -113,8 +115,8 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                 }}
                 width={Dimensions.get("window").width} // from react-native
                 height={220}
-                yAxisLabel="$"
-                yAxisSuffix="k"
+                yAxisLabel=""
+                yAxisSuffix=""
                 yAxisInterval={1} // optional, defaults to 1
                 chartConfig={{
                   backgroundColor: "#e26a00",
@@ -140,7 +142,11 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                 }}
               />
             </View>
+          )}
 
+        {xGyroCoordinateData.length !== 0 &&
+          yGyroCoordinateData.length !== 0 &&
+          zGyroCoordinateData.length !== 0 && (
             <View>
               <Text>Bezier Line Chart</Text>
               <LineChart
@@ -157,8 +163,8 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                 }}
                 width={Dimensions.get("window").width} // from react-native
                 height={220}
-                yAxisLabel="$"
-                yAxisSuffix="k"
+                yAxisLabel=""
+                yAxisSuffix=""
                 yAxisInterval={1} // optional, defaults to 1
                 chartConfig={{
                   backgroundColor: "#e26a00",
@@ -184,18 +190,15 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                 }}
               />
             </View>
+          )}
 
-            {/* Start Session Button */}
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate("Session")}
-            >
-              <Text style={styles.buttonText}>Start Session</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <Text>Please Connect to to the Paddle</Text>
-        )}
+        {/* Start Session Button */}
+        <TouchableOpacity style={styles.button} onPress={openModal}>
+          <Text style={styles.buttonText}>Start Session</Text>
+        </TouchableOpacity>
+        <SessionModal closeModal={hideModal} visible={isModalVisible} />
+
+        {/* Bluetooth connection */}
         <TouchableOpacity
           onPress={connectedDevice ? disconnectFromDevice : openModal}
           style={styles.button}
