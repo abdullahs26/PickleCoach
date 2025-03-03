@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.PickleCoach"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,9 +18,6 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"

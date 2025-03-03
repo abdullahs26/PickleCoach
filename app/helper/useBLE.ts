@@ -24,6 +24,9 @@ const characteristic_map = {
   MIC_RIGHT: "FC21",
   MIC_TOP: "FC22",
   MIC_BOTTOM: "FC23",
+  ACCEL_ALL:"FC03",
+  GYRO_ALL:"FC13",
+  MIC_ALL:"FC24"
 };
 
 interface BluetoothLowEnergyApi {
@@ -36,6 +39,24 @@ interface BluetoothLowEnergyApi {
   heartRate: number;
 }
 
+class Queue{
+  public storage: number[][]=[];
+  constructor(private capacity: number = 10) {}
+
+  enqueue(item: number[]){
+    if(this.storage.length==this.capacity){
+      this.storage.shift(); 
+    }
+    this.storage.push(item);
+
+  }
+  
+  getData():number[][]{
+    return this.storage;
+  }
+  
+
+}
 function hexToDouble(hexStr: string): number {
     if (hexStr.length !== 16) {
         throw new Error("Expected 64-bit (16 hex chars) input for double conversion.");
@@ -169,7 +190,7 @@ function useBLE(): BluetoothLowEnergyApi {
       if (error) {
         console.log(error);
       }
-      if (device && device.name?.includes("PICO")) {
+      if (device && device.name?.includes("Pico")) {
         setAllDevices((prevState: Device[]) => {
           if (!isDuplicteDevice(prevState, device)) {
             return [...prevState, device];
@@ -199,11 +220,59 @@ function useBLE(): BluetoothLowEnergyApi {
       setHeartRate(0);
     }
   };
+// Convert an integer to an array of "bytes" in network/big-endian order.
+function htonl(n: any)
+{
+    // Mask off 8 bytes at a time then shift them into place
+    return [
+        (n & 0xFF000000) >>> 24,
+        (n & 0x00FF0000) >>> 16,
+        (n & 0x0000FF00) >>>  8,
+        (n & 0x000000FF) >>>  0,
+    ];
+}
+
+function convertNetworkToAndroidEndian(buffer: ArrayBuffer): number[] {
+  const dataView = new DataView(buffer);
+  const floats: number[] = [];
+
+  for (let i = 0; i < 3; i++) {
+      floats.push(dataView.getFloat32(i * 4, true)); // false means big-endian (network order)
+  }
+
+  return floats;
+}
+
+const accel_data_buffer=new Queue();
+
+
+let data_count:number=0;
+const deadReckoning=()=>{
+  let pos_x=0.0;
+  let pos_y=0.0;
+  let pos_z=0.0;
+
+  let curr_sum=0.0;
+
+
+  for(let i=0;i<accel_data_buffer.storage.length;i+=1){
+      let accel_x=accel_data_buffer.storage[i][0];
+      let accel_y=accel_data_buffer.storage[i][1];
+      let accel_z=accel_data_buffer.storage[i][2];
+
+      let d=Math.sqrt(accel_x**2+accel_y**2+accel_z**2)*(0.1**2);
+
+      curr_sum+=d;
+  }
+
+  console.log("dead reckoning: "+curr_sum);
+};
 
   const onAccelUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null
   ) => {
+    // console.log("REACHHHH IN DA ACCEL");
     if (error) {
       console.log(error);
       return -1;
@@ -211,14 +280,31 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log("No Data was recieved");
       return -1;
     }
-    console.log("HEjjlo accel")
-    const hex = base64ToBigEndianHex(characteristic.value);
-      console.log(parseFloat(hex));
+    // console.log("HEjjlo accel")
+    // const hex = base64ToBigEndianHex(characteristic.value);
+    //   console.log(parseFloat(hex));
+
+    let binaryData = Uint8Array.from(atob(characteristic.value), (c) =>
+      c.charCodeAt(0)
+    );
+
+    if(data_count>0){
+      accel_data_buffer.enqueue(convertNetworkToAndroidEndian(binaryData.buffer));
+      data_count-=1;
+      if (data_count==0){
+        deadReckoning();
+
+      }
+    }
+
+
+
   };
   const onGyroUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null
   ) => {
+
     if (error) {
       console.log(error);
       return -1;
@@ -226,10 +312,16 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log("No Data was recieved");
       return -1;
     }
-    console.log("HEjjlo gyro");
-    const hex = base64ToBigEndianHex(characteristic.value);
-    console.log(parseFloat(hex));
+    
+    let binaryData = Uint8Array.from(atob(characteristic.value), (c) =>
+      c.charCodeAt(0)
+    );
+
+    // console.log("Gyro Data: "+convertNetworkToAndroidEndian(binaryData.buffer))
   };
+
+  let prev_mic_data:string=""
+
   const onMicUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null
@@ -241,89 +333,47 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log("No Data was recieved");
       return -1;
     }
-    // console.log("HEjjlo mic");
-    let decoded=base64.decode(characteristic.value);
-    let num=Number(decoded);
-    // console.log(decoded + " accel");
+    // let decoded=base64.decode(characteristic.value);
     let binaryData = Float64Array.from(atob(characteristic.value), (c) =>
       c.charCodeAt(0)
     );
 
-    // let data = base64.decode(base64Str);
-    // let val=new Float64Array(binaryData.buffer);
-    // if (val[0]>16.0) {
-    //   console.log(val + " " + " MICCC");
+    if(binaryData.toString()!=prev_mic_data){
+      data_count=10;
+      accel_data_buffer.storage=[];
+      prev_mic_data=binaryData.toString();
+      console.log("MIC DATA: "+binaryData);
 
-    // }
-    // let floatArr = new Float64Array(binaryData.buffer); // I
-    let val = binaryData[0];
-    // console.log(val);
-
-    if (val > 10) {
-      console.log("reach here "+ val+" leng "+binaryData.length);
     }
-    // console.log(parseFloat(atob(characteristic.value)))
-    // const hex = base64ToBigEndianHex(characteristic.value);
-    // console.log(parseFloat(hex));
+
+
+    // let val = binaryData[0];
+
+    //   console.log("reach here "+ val+" leng "+characteristic.uuid);
+
   };
   
 
   const startStreamingData = async (device: Device) => {
     if (device) {
-      console.log("hello from montor")
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.ACCEL_X,
-      //   onAccelUpdate
-      // );
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.ACCEL_Y,
-      //   onAccelUpdate
-      // );
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.ACCEL_Z,
-      //   onAccelUpdate
-      // );
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.GYRO_X,
-      //   onGyroUpdate
-      // );
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.GYRO_Y,
-      //   onGyroUpdate
-      // );
-      // device.monitorCharacteristicForService(
-      //   PADDLE_UUID,
-      //   characteristic_map.GYRO_Z,
-      //   onGyroUpdate
-      // );
       device.monitorCharacteristicForService(
         PADDLE_UUID,
-        characteristic_map.MIC_BOTTOM,
-        onMicUpdate
+        characteristic_map.ACCEL_ALL,
+        onAccelUpdate
       );
-      device.monitorCharacteristicForService(
-        PADDLE_UUID,
-        characteristic_map.MIC_LEFT,
-        onMicUpdate
-      );
-      device.monitorCharacteristicForService(
-        PADDLE_UUID,
-        characteristic_map.MIC_RIGHT,
-        onMicUpdate
-      );
-      device.monitorCharacteristicForService(
-        PADDLE_UUID,
-        characteristic_map.MIC_TOP,
-        onMicUpdate
-      );
-      
 
-        
+      device.monitorCharacteristicForService(
+        PADDLE_UUID,
+        characteristic_map.GYRO_ALL,
+        onGyroUpdate
+      );
+      device.monitorCharacteristicForService(
+        PADDLE_UUID,
+        characteristic_map.MIC_ALL,
+        onMicUpdate
+      );
+
+
       // const characteristic = await device.readCharacteristicForService(
       //   PADDLE_UUID,
       //   PADDLE_CHARACTERISTIC,
