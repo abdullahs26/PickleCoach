@@ -77,126 +77,145 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       {/* Summary Section */}
       <ScrollView>
-        <View style={styles.card}>
-          <Text style={styles.title}>Game History</Text>
-          <Text style={styles.stat}>Total Games Played: 591</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.title}>Player Statistics</Text>
-          <Text style={styles.stat}>Total Shots Hit: 2067</Text>
-          <Text style={styles.stat}>Total Shots Missed: 98</Text>
-        </View>
-        {/* Most Recent Session */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Most Recent Session</Text>
-          <Text>Date: April 28, 2024</Text>
-          <Text>Location: Waterloo, ON</Text>
-          <Text>Accuracy: 77%</Text>
-          <Text>Total Shots: 161</Text>
-        </View>
-
-        {xAccelCoordinateData.length !== 0 &&
-          yAccelCoordinateData.length !== 0 &&
-          zAccelCoordinateData.length !== 0 && (
-            <View>
-              <Text>Bezier Line Chart</Text>
-              <LineChart
-                data={{
-                  labels: [],
-                  datasets: [
-                    {
-                      data: xAccelCoordinateData,
-                      color: () => "#C7EBFF",
-                    },
-                    { data: yAccelCoordinateData, color: () => "#ED7C33" },
-                    { data: zAccelCoordinateData, color: () => "#96ed33" },
-                  ],
-                }}
-                width={Dimensions.get("window").width} // from react-native
-                height={220}
-                yAxisLabel=""
-                yAxisSuffix=""
-                yAxisInterval={1} // optional, defaults to 1
-                chartConfig={{
-                  backgroundColor: "#e26a00",
-                  backgroundGradientFrom: "#fb8c00",
-                  backgroundGradientTo: "#ffa726",
-                  decimalPlaces: 2, // optional, defaults to 2dp
-                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                  labelColor: (opacity = 1) =>
-                    `rgba(255, 255, 255, ${opacity})`,
-                  style: {
-                    borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#ffa726",
-                  },
-                }}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-              />
+        {connectedDevice && !isDeviceConnected ? (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.title}>Game History</Text>
+              <Text style={styles.stat}>Total Games Played: 591</Text>
             </View>
-          )}
 
-        {xGyroCoordinateData.length !== 0 &&
-          yGyroCoordinateData.length !== 0 &&
-          zGyroCoordinateData.length !== 0 && (
-            <View>
-              <Text>Bezier Line Chart</Text>
-              <LineChart
-                data={{
-                  labels: [],
-                  datasets: [
-                    {
-                      data: xGyroCoordinateData,
-                      color: () => "#C7EBFF",
-                    },
-                    { data: yGyroCoordinateData, color: () => "#ED7C33" },
-                    { data: zGyroCoordinateData, color: () => "#96ed33" },
-                  ],
-                }}
-                width={Dimensions.get("window").width} // from react-native
-                height={220}
-                yAxisLabel=""
-                yAxisSuffix=""
-                yAxisInterval={1} // optional, defaults to 1
-                chartConfig={{
-                  backgroundColor: "#e26a00",
-                  backgroundGradientFrom: "#fb8c00",
-                  backgroundGradientTo: "#ffa726",
-                  decimalPlaces: 2, // optional, defaults to 2dp
-                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                  labelColor: (opacity = 1) =>
-                    `rgba(255, 255, 255, ${opacity})`,
-                  style: {
-                    borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#ffa726",
-                  },
-                }}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-              />
+            <View style={styles.card}>
+              <Text style={styles.title}>Player Statistics</Text>
+              <Text style={styles.stat}>Total Shots Hit: 2067</Text>
+              <Text style={styles.stat}>Total Shots Missed: 98</Text>
             </View>
-          )}
 
-        {/* Start Session Button */}
-        <TouchableOpacity style={styles.button} onPress={openModal}>
-          <Text style={styles.buttonText}>Start Session</Text>
-        </TouchableOpacity>
-        <SessionModal closeModal={hideModal} visible={isModalVisible} />
+            {/* Most Recent Session */}
+            <View style={styles.card}>
+              <Text style={styles.title}>Most Recent Session</Text>
+              <Text>Date: April 28, 2024</Text>
+              <Text>Location: Waterloo, ON</Text>
+              <Text>Accuracy: 77%</Text>
+              <Text>Total Shots: 161</Text>
+            </View>
+
+            {xAccelCoordinateData.length !== 0 &&
+              yAccelCoordinateData.length !== 0 &&
+              zAccelCoordinateData.length !== 0 && (
+                <View>
+                  <Text>Bezier Line Chart</Text>
+                  <LineChart
+                    data={{
+                      labels: [],
+                      datasets: [
+                        {
+                          data: xAccelCoordinateData,
+                          color: () => "#C7EBFF",
+                        },
+                        {
+                          data: yAccelCoordinateData,
+                          color: () => "#ED7C33",
+                        },
+                        {
+                          data: zAccelCoordinateData,
+                          color: () => "#96ed33",
+                        },
+                      ],
+                    }}
+                    width={Dimensions.get("window").width} // from react-native
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    yAxisInterval={1} // optional, defaults to 1
+                    chartConfig={{
+                      backgroundColor: "#e26a00",
+                      backgroundGradientFrom: "#fb8c00",
+                      backgroundGradientTo: "#ffa726",
+                      decimalPlaces: 2, // optional, defaults to 2dp
+                      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(255, 255, 255, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: "#ffa726",
+                      },
+                    }}
+                    bezier
+                    style={{
+                      marginVertical: 8,
+                      borderRadius: 16,
+                    }}
+                  />
+                </View>
+              )}
+
+            {xGyroCoordinateData.length !== 0 &&
+              yGyroCoordinateData.length !== 0 &&
+              zGyroCoordinateData.length !== 0 && (
+                <View>
+                  <Text>Bezier Line Chart</Text>
+                  <LineChart
+                    data={{
+                      labels: [],
+                      datasets: [
+                        {
+                          data: xGyroCoordinateData,
+                          color: () => "#C7EBFF",
+                        },
+                        {
+                          data: yGyroCoordinateData,
+                          color: () => "#ED7C33",
+                        },
+                        {
+                          data: zGyroCoordinateData,
+                          color: () => "#96ed33",
+                        },
+                      ],
+                    }}
+                    width={Dimensions.get("window").width} // from react-native
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    yAxisInterval={1} // optional, defaults to 1
+                    chartConfig={{
+                      backgroundColor: "#e26a00",
+                      backgroundGradientFrom: "#fb8c00",
+                      backgroundGradientTo: "#ffa726",
+                      decimalPlaces: 2, // optional, defaults to 2dp
+                      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(255, 255, 255, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: "#ffa726",
+                      },
+                    }}
+                    bezier
+                    style={{
+                      marginVertical: 8,
+                      borderRadius: 16,
+                    }}
+                  />
+                </View>
+              )}
+
+            {/* Start Session Button */}
+            <TouchableOpacity style={styles.button} onPress={openModal}>
+              <Text style={styles.buttonText}>Start Session</Text>
+            </TouchableOpacity>
+            <SessionModal closeModal={hideModal} visible={isModalVisible} />
+          </>
+        ) : (
+          <Text style= {styles.connectText}>Please Connect to the Paddle</Text>
+        )}
 
         {/* Bluetooth connection */}
         <TouchableOpacity
@@ -252,6 +271,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
+  connectText: {
+    marginTop: 40,
+    fontSize: 30,
+    fontWeight: "bold",
+    marginHorizontal: 20,
+    textAlign: "center",
+  },
 });
 
 export default HomeScreen;
