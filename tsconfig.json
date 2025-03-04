@@ -1,7 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target":"es5",
+    "module": "commonjs",
+    "module":"es2017"monjs",
+    "target":"es2017",
     "lib":["ES2015"],
     "strict": true,
     "paths": {
