@@ -35,7 +35,8 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       zAccelCoordinateData,
       zGyroCoordinateData
     } = useBLE();
-    const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+    const [isConncetModalVisible, setIsConnectModalVisible] = useState<boolean>(false);
+    const [isSessionModalVisible, setIsSessionModalVisible] = useState<boolean>(false);
     const [isDeviceConnected, setIsDeviceConnected] = useState<boolean>(false);
 
     const scanForDevices = async () => {
@@ -45,13 +46,22 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       }
     };
 
-    const hideModal = () => {
-      setIsModalVisible(false);
+    const hideConnectModal = () => {
+      setIsConnectModalVisible(false);
     };
 
-    const openModal = async () => {
+    const openConnectModal = async () => {
       scanForDevices();
-      setIsModalVisible(true);
+      setIsConnectModalVisible(true);
+    };
+
+    const hideSessionModal = () => {
+      setIsSessionModalVisible(false);
+    };
+
+    const openSessionModal = async () => {
+      scanForDevices();
+      setIsSessionModalVisible(true);
     };
 
     useEffect(() => {
@@ -208,10 +218,10 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
               )}
 
             {/* Start Session Button */}
-            <TouchableOpacity style={styles.button} onPress={openModal}>
+            <TouchableOpacity style={styles.button} onPress={openSessionModal}>
               <Text style={styles.buttonText}>Start Session</Text>
             </TouchableOpacity>
-            <SessionModal closeModal={hideModal} visible={isModalVisible} />
+            <SessionModal closeModal={hideSessionModal} visible={isSessionModalVisible} />
           </>
         ) : (
           <Text style= {styles.connectText}>Please Connect to the Paddle</Text>
@@ -219,7 +229,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
         {/* Bluetooth connection */}
         <TouchableOpacity
-          onPress={connectedDevice ? disconnectFromDevice : openModal}
+          onPress={connectedDevice ? disconnectFromDevice : openConnectModal}
           style={styles.button}
         >
           <Text style={styles.buttonText}>
@@ -227,8 +237,8 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
           </Text>
         </TouchableOpacity>
         <DeviceModal
-          closeModal={hideModal}
-          visible={isModalVisible}
+          closeModal={hideConnectModal}
+          visible={isConncetModalVisible}
           connectToPeripheral={connectToDevice}
           devices={allDevices}
         />
