@@ -39,9 +39,13 @@ interface BluetoothLowEnergyApi {
   xGyroCoordinateData: number[];
   yGyroCoordinateData: number[];
   zGyroCoordinateData: number[];
+  gyroCoordinateData: number[][];
   xAccelCoordinateData: number[];
   yAccelCoordinateData: number[];
   zAccelCoordinateData: number[];
+  accelCoordinateData: number[][];
+  deadReckoning: number[];
+  micData: number[][];
 }
 class Queue{
   public storage: number[][]=[];
@@ -73,9 +77,13 @@ function useBLE(): BluetoothLowEnergyApi {
   const [xGyroCoordinateData, setXGyroCoordinateData] = useState<number[]>([]);
   const [yGyroCoordinateData, setYGyroCoordinateData] = useState<number[]>([]);
   const [zGyroCoordinateData, setZGyroCoordinateData] = useState<number[]>([]);
+  const [gyroCoordinateData, setGyroCoordinateData] = useState<number[][]>([]);
   const [xAccelCoordinateData, setXAccelCoordinateData] = useState<number[]>([]);
   const [yAccelCoordinateData, setYAccelCoordinateData] = useState<number[]>([]);
   const [zAccelCoordinateData, setZAccelCoordinateData] = useState<number[]>([]);
+  const [accelCoordinateData, setAccelCoordinateData] = useState<number[][]>([]);
+  const [deadReckoning, setDeadReckoning]               = useState<number[]>([]);
+  const [micData, setMicData] = useState<number[][]>([])
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -189,7 +197,7 @@ function useBLE(): BluetoothLowEnergyApi {
   }
   
 
-  const deadReckoning=()=>{
+  const calculateDeadReckoning=()=>{
     let pos_x=0.0;
     let pos_y=0.0;
     let pos_z=0.0;
@@ -206,7 +214,13 @@ function useBLE(): BluetoothLowEnergyApi {
   
         curr_sum+=d;
     }
-  
+     setDeadReckoning((prevData) => {
+       const newData = [...prevData, curr_sum];
+       // if (newData.length > 9) newData.shift();
+       console.log("dead reckoning", newData);
+
+       return newData;
+     })
     console.log("dead reckoning: "+curr_sum);
   };
   
@@ -232,26 +246,34 @@ function useBLE(): BluetoothLowEnergyApi {
 
       setXAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[0]]; 
-        if (newData.length > 9) newData.shift();
+        // if (newData.length > 9) newData.shift();
         return newData;
       });
 
       setYAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[1]]; 
-        if (newData.length > 9) newData.shift();
+        // if (newData.length > 9) newData.shift();
         return newData;
       });
       setZAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[2]]; 
-        if (newData.length > 9) newData.shift();
+        // if (newData.length > 9) newData.shift();
         return newData;
       });
+
+      setAccelCoordinateData((prevData) => {
+        const newData = [...prevData, data];
+        // if (newData.length > 9) newData.shift();
+        return newData;
+      });
+
+      console.log(xAccelCoordinateData.length, yAccelCoordinateData.length, zAccelCoordinateData.length)
       
       if(data_count>0){
         accel_data_buffer.enqueue(data);
         data_count-=1;
         if (data_count==0){
-          deadReckoning();
+          calculateDeadReckoning();
   
         }
       }
@@ -263,7 +285,7 @@ function useBLE(): BluetoothLowEnergyApi {
       error: BleError | null,
       characteristic: Characteristic | null
     ) => {
-  
+      // console.log("GYROOOOO")
       if (error) {
         console.log(error);
         return -1;
@@ -278,25 +300,38 @@ function useBLE(): BluetoothLowEnergyApi {
       let data=convertNetworkToAndroidEndian(binaryData.buffer)
     
       if(Date.now()-curr_gyro_time>200){
-
         curr_gyro_time=Date.now();
 
-        setXGyroCoordinateData(prevData=>{
+        setXGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[0]]; 
-          if (newData.length > 9) newData.shift();
+          // if (newData.length > 9) newData.shift();
+        console.log("data gyro array", newData);
+
           return newData;
         });
 
-        setYGyroCoordinateData(prevData=>{
+        setYGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[1]]; 
-          if (newData.length > 9) newData.shift();
+          // if (newData.length > 9) newData.shift();
           return newData;
         });
-        setZGyroCoordinateData(prevData=>{
+        setZGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[2]]; 
-          if (newData.length > 9) newData.shift();
+          // if (newData.length > 9) newData.shift();
           return newData;
         });
+        setGyroCoordinateData((prevData) => {
+          const newData = [...prevData, data];
+          // if (newData.length > 9) newData.shift();
+          return newData;
+        });
+
+              console.log(
+                xGyroCoordinateData.length,
+                yGyroCoordinateData.length,
+                zGyroCoordinateData.length
+              );
+
     }
       // console.log("Gyro Data: "+convertNetworkToAndroidEndian(binaryData.buffer))
     };
@@ -368,7 +403,11 @@ function useBLE(): BluetoothLowEnergyApi {
     zAccelCoordinateData,
     xGyroCoordinateData,
     yGyroCoordinateData,
-    zGyroCoordinateData
+    zGyroCoordinateData,
+    deadReckoning,
+    accelCoordinateData,
+    gyroCoordinateData,
+    micData
   };
 }
 
