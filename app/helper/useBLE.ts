@@ -221,7 +221,12 @@ function useBLE(): BluetoothLowEnergyApi {
   
         curr_sum+=d;
     }
-
+    /*
+    state 0 is drop
+    state 1 is dink
+    state 2 is drive
+    state 3 is smash
+    */
     let state=0;
     if (curr_sum>165){
       state=3;
@@ -240,7 +245,7 @@ function useBLE(): BluetoothLowEnergyApi {
        return newData;
      })
 
-     
+
     console.log("dead reckoning: "+curr_sum);
   };
   
