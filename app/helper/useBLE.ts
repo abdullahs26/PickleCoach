@@ -45,8 +45,9 @@ interface BluetoothLowEnergyApi {
   zAccelCoordinateData: number[];
   accelCoordinateData: number[][];
   deadReckoning: number[];
-  micData: number[][];
+  micData: number[];
 }
+ 
 class Queue{
   public storage: number[][]=[];
   constructor(private capacity: number = 10) {}
@@ -69,6 +70,10 @@ const accel_data_buffer=new Queue();
 let data_count:number=0;
 let prev_mic_data:string=""
 let curr_gyro_time=Date.now();
+let lastGyro:number[]=[];
+let lastAccel:number[]=[];
+let hitGyro:number[]=[];
+let hitAccel:number[]=[];
 
 function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
@@ -82,8 +87,10 @@ function useBLE(): BluetoothLowEnergyApi {
   const [yAccelCoordinateData, setYAccelCoordinateData] = useState<number[]>([]);
   const [zAccelCoordinateData, setZAccelCoordinateData] = useState<number[]>([]);
   const [accelCoordinateData, setAccelCoordinateData] = useState<number[][]>([]);
-  const [deadReckoning, setDeadReckoning]               = useState<number[]>([]);
-  const [micData, setMicData] = useState<number[][]>([])
+  const [deadReckoning, setDeadReckoning]= useState<number[]>([]);
+  const [micData, setMicData] = useState<number[]>([])
+  // const [lastGyro,setLastGyroData]=useState<number[]>([]);
+  // const [lastAccel,setLastAcelData]=useState<number[]>([]);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -214,13 +221,26 @@ function useBLE(): BluetoothLowEnergyApi {
   
         curr_sum+=d;
     }
-     setDeadReckoning((prevData) => {
-       const newData = [...prevData, curr_sum];
+
+    let state=0;
+    if (curr_sum>165){
+      state=3;
+    }else if(curr_sum>150){
+      state=2;
+    }else if(curr_sum>130){
+      state=1;
+    }
+
+
+    setDeadReckoning((prevData) => {
+       const newData = [...prevData, state];
        // if (newData.length > 9) newData.shift();
-       console.log("dead reckoning", newData);
+       console.log("dead reckoning", state);
 
        return newData;
      })
+
+     
     console.log("dead reckoning: "+curr_sum);
   };
   
@@ -298,7 +318,10 @@ function useBLE(): BluetoothLowEnergyApi {
         c.charCodeAt(0)
       );
       let data=convertNetworkToAndroidEndian(binaryData.buffer)
-    
+
+      lastGyro=data;
+ 
+
       if(Date.now()-curr_gyro_time>200){
         curr_gyro_time=Date.now();
 
@@ -359,6 +382,8 @@ function useBLE(): BluetoothLowEnergyApi {
         prev_mic_data=binaryData.toString();
         console.log("MIC DATA: "+binaryData);
   
+        hitGyro=lastGyro;
+        hitAccel=lastAccel;
       }
   
   
