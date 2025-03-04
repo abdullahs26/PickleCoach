@@ -1,74 +1,293 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, {useEffect, useState} from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions
+} from "react-native";
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart,
+} from "react-native-chart-kit";
+import { SafeAreaView } from "react-native-safe-area-context";
+import DeviceModal from "../modal/deviceConnectionModal";
+import useBLE from "../helper/useBLE";
+import SessionModal from "../modal/sessionModal";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const HomeScreen = ({ navigation }: { navigation: any }) => {
+    const {
+      requestPermissions,
+      scanForPeripherals,
+      allDevices,
+      connectToDevice,
+      connectedDevice,
+      disconnectFromDevice,
+      xAccelCoordinateData,
+      xGyroCoordinateData,
+      yAccelCoordinateData,
+      yGyroCoordinateData,
+      zAccelCoordinateData,
+      zGyroCoordinateData
+    } = useBLE();
+    const [isConncetModalVisible, setIsConnectModalVisible] = useState<boolean>(false);
+    const [isSessionModalVisible, setIsSessionModalVisible] = useState<boolean>(false);
+    const [isDeviceConnected, setIsDeviceConnected] = useState<boolean>(false);
 
-export default function HomeScreen() {
+    const scanForDevices = async () => {
+      const isPermissionsEnabled = await requestPermissions();
+      if (isPermissionsEnabled) {
+        scanForPeripherals();
+      }
+    };
+
+    const hideConnectModal = () => {
+      setIsConnectModalVisible(false);
+    };
+
+    const openConnectModal = async () => {
+      scanForDevices();
+      setIsConnectModalVisible(true);
+    };
+
+    const hideSessionModal = () => {
+      setIsSessionModalVisible(false);
+    };
+
+    const openSessionModal = async () => {
+      scanForDevices();
+      setIsSessionModalVisible(true);
+    };
+
+    useEffect(() => {
+      console.log("in the effect")
+      if (connectedDevice) {
+        setIsDeviceConnected(true);
+        setTimeout (() => {
+            setIsDeviceConnected(false);
+          }, 10000)  
+      }
+    }, [connectedDevice])
+  
+  if (isDeviceConnected) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.header}>
+          Please keep the paddle down for 10 secs
+        </Text>
+      </SafeAreaView>
+    );
+  }  
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={styles.container}>
+      {/* Summary Section */}
+      <ScrollView>
+        {connectedDevice && !isDeviceConnected ? (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.title}>Game History</Text>
+              <Text style={styles.stat}>Total Games Played: 591</Text>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.title}>Player Statistics</Text>
+              <Text style={styles.stat}>Total Shots Hit: 2067</Text>
+              <Text style={styles.stat}>Total Shots Missed: 98</Text>
+            </View>
+
+            {/* Most Recent Session */}
+            <View style={styles.card}>
+              <Text style={styles.title}>Most Recent Session</Text>
+              <Text>Date: April 28, 2024</Text>
+              <Text>Location: Waterloo, ON</Text>
+              <Text>Accuracy: 77%</Text>
+              <Text>Total Shots: 161</Text>
+            </View>
+
+            {xAccelCoordinateData.length !== 0 &&
+              yAccelCoordinateData.length !== 0 &&
+              zAccelCoordinateData.length !== 0 && (
+                <View>
+                  <Text>Bezier Line Chart</Text>
+                  <LineChart
+                    data={{
+                      labels: [],
+                      datasets: [
+                        {
+                          data: xAccelCoordinateData,
+                          color: () => "#C7EBFF",
+                        },
+                        {
+                          data: yAccelCoordinateData,
+                          color: () => "#ED7C33",
+                        },
+                        {
+                          data: zAccelCoordinateData,
+                          color: () => "#96ed33",
+                        },
+                      ],
+                    }}
+                    width={Dimensions.get("window").width} // from react-native
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    yAxisInterval={1} // optional, defaults to 1
+                    chartConfig={{
+                      backgroundColor: "#e26a00",
+                      backgroundGradientFrom: "#fb8c00",
+                      backgroundGradientTo: "#ffa726",
+                      decimalPlaces: 2, // optional, defaults to 2dp
+                      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(255, 255, 255, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: "#ffa726",
+                      },
+                    }}
+                    bezier
+                    style={{
+                      marginVertical: 8,
+                      borderRadius: 16,
+                    }}
+                  />
+                </View>
+              )}
+
+            {xGyroCoordinateData.length !== 0 &&
+              yGyroCoordinateData.length !== 0 &&
+              zGyroCoordinateData.length !== 0 && (
+                <View>
+                  <Text>Bezier Line Chart</Text>
+                  <LineChart
+                    data={{
+                      labels: [],
+                      datasets: [
+                        {
+                          data: xGyroCoordinateData,
+                          color: () => "#C7EBFF",
+                        },
+                        {
+                          data: yGyroCoordinateData,
+                          color: () => "#ED7C33",
+                        },
+                        {
+                          data: zGyroCoordinateData,
+                          color: () => "#96ed33",
+                        },
+                      ],
+                    }}
+                    width={Dimensions.get("window").width} // from react-native
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    yAxisInterval={1} // optional, defaults to 1
+                    chartConfig={{
+                      backgroundColor: "#e26a00",
+                      backgroundGradientFrom: "#fb8c00",
+                      backgroundGradientTo: "#ffa726",
+                      decimalPlaces: 2, // optional, defaults to 2dp
+                      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(255, 255, 255, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: "#ffa726",
+                      },
+                    }}
+                    bezier
+                    style={{
+                      marginVertical: 8,
+                      borderRadius: 16,
+                    }}
+                  />
+                </View>
+              )}
+
+            {/* Start Session Button */}
+            <TouchableOpacity style={styles.button} onPress={openSessionModal}>
+              <Text style={styles.buttonText}>Start Session</Text>
+            </TouchableOpacity>
+            <SessionModal closeModal={hideSessionModal} visible={isSessionModalVisible} />
+          </>
+        ) : (
+          <Text style= {styles.connectText}>Please Connect to the Paddle</Text>
+        )}
+
+        {/* Bluetooth connection */}
+        <TouchableOpacity
+          onPress={connectedDevice ? disconnectFromDevice : openConnectModal}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>
+            {connectedDevice ? "Disconnect" : "Connect"}
+          </Text>
+        </TouchableOpacity>
+        <DeviceModal
+          closeModal={hideConnectModal}
+          visible={isConncetModalVisible}
+          connectToPeripheral={connectToDevice}
+          devices={allDevices}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome EVAN !</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: "#E0FFF7" },
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#00C781",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  card: {
+    backgroundColor: "#FFFFFF",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  title: { fontSize: 18, fontWeight: "bold", color: "#008D62" },
+  stat: { fontSize: 16, color: "#333", marginTop: 5 },
+  button: {
+    backgroundColor: "#008D62",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  buttonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
+  connectText: {
+    marginTop: 40,
+    fontSize: 30,
+    fontWeight: "bold",
+    marginHorizontal: 20,
+    textAlign: "center",
   },
 });
+
+export default HomeScreen;
