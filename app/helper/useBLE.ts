@@ -411,15 +411,10 @@ function useBLE(): BluetoothLowEnergyApi {
       if(binaryData.toString()!=prev_mic_data){
 
 
-        // let curr_time=Date.now();
-        // console.log(curr_time.toString(), " ", last_mic_time.toString(), " diff  ", curr_time-last_mic_time);
-        // if ((curr_time-last_mic_time)<500){
-        //   last_mic_time=curr_time;
-        //   // data_count=0;
-        // }
-        // else{
-          console.log("reach in the mic");
-          // last_mic_time=curr_time;
+        let curr_time=Date.now();
+        if ((curr_time-last_mic_time)>500){
+          // data_count=0;
+          last_mic_time=curr_time;
           data_count=10;
 
           accel_data_buffer.storage=[];
@@ -458,14 +453,13 @@ function useBLE(): BluetoothLowEnergyApi {
           }
           console.log("LOCATION: " + grid_spot);
         }
+   
+
+
+
+
   
-
-
-
-
-
-  
-      // }
+      }
   
   
       // let val = binaryData[0];
