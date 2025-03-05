@@ -19,6 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DeviceModal from "../modal/deviceConnectionModal";
 import useBLE from "../helper/useBLE";
 import SessionModal from "../modal/sessionModal";
+import { useSQLiteContext } from "expo-sqlite";
+import {v4 as uuidv4} from 'uuid';
 
 const HomeScreen = ({ navigation }: { navigation: any }) => {
     const {
@@ -33,11 +35,23 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       yAccelCoordinateData,
       yGyroCoordinateData,
       zAccelCoordinateData,
-      zGyroCoordinateData
+      zGyroCoordinateData,
+      deadReckoning,
+      accelCoordinateData,
+      gyroCoordinateData,
+      micData
     } = useBLE();
+    const [driveShots, setDriveShots] = useState<number>(0);
+    const [dinkShots, setDinkShots] = useState<number>(0);
+    const [dropShots, setDropShots] = useState<number>(0);
+    const [serveShots, setServeShots] = useState<number>(0);
+    const [totalShots, setTotalShots] = useState<number>(0);
+    const [totalShotsHit, setTotalShotsHit] = useState<number>(0);
     const [isConncetModalVisible, setIsConnectModalVisible] = useState<boolean>(false);
     const [isSessionModalVisible, setIsSessionModalVisible] = useState<boolean>(false);
     const [isDeviceConnected, setIsDeviceConnected] = useState<boolean>(false);
+
+    const database = useSQLiteContext();
 
     const scanForDevices = async () => {
       const isPermissionsEnabled = await requestPermissions();
@@ -55,15 +69,28 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       setIsConnectModalVisible(true);
     };
 
-    const hideSessionModal = () => {
-      setIsSessionModalVisible(false);
+    const hideSessionModal = async () => {
+        setIsSessionModalVisible(false);
     };
 
     const openSessionModal = async () => {
-      scanForDevices();
       setIsSessionModalVisible(true);
+          try {
+            const response = await database.runAsync(
+              `INSERT INTO game_table (
+      Date ) VALUES (CURRENT_DATE)`
+            );
+            console.log("-----------------------------Item saved successfully FROM SESSION:", response?.changes!);
+          } catch (error) {
+            console.error("Error saving item:", error);
+          }
     };
 
+    // useEffect(() => {
+    //   console.log("gyro x", xGyroCoordinateData);
+    //   console.log(yGyroCoordinateData);
+    //   console.log(zGyroCoordinateData);
+    // }, [xGyroCoordinateData]);
     useEffect(() => {
       console.log("in the effect")
       if (connectedDevice) {
@@ -74,6 +101,19 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       }
     }, [connectedDevice])
   
+    // useEffect(() => {
+    //   let deadReckoningValue = deadReckoning[-1]
+    //   if (deadReckoningValue > 200) {
+
+    //   } else if() {
+
+    //   } else if() {
+
+    //   } else {
+
+    //   }
+    // },[deadReckoning])
+
   if (isDeviceConnected) {
     return (
       <SafeAreaView style={styles.container}>
@@ -221,10 +261,13 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
             <TouchableOpacity style={styles.button} onPress={openSessionModal}>
               <Text style={styles.buttonText}>Start Session</Text>
             </TouchableOpacity>
-            <SessionModal closeModal={hideSessionModal} visible={isSessionModalVisible} />
+            <SessionModal
+              closeModal={hideSessionModal}
+              visible={isSessionModalVisible}
+            />
           </>
         ) : (
-          <Text style= {styles.connectText}>Please Connect to the Paddle</Text>
+          <Text style={styles.connectText}>Please Connect to the Paddle</Text>
         )}
 
         {/* Bluetooth connection */}

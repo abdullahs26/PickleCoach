@@ -10,6 +10,7 @@ import {
 import * as ExpoDevice from "expo-device";
 import base64 from "react-native-base64";
 import { FlatList } from "react-native-gesture-handler";
+import { useSQLiteContext } from "expo-sqlite";
 
 // TODO: get uuid and characteristic of paddle
 const PADDLE_UUID = "181A";
@@ -77,6 +78,7 @@ let hitAccel:number[]=[];
 
 function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
+  const database = useSQLiteContext();
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [xGyroCoordinateData, setXGyroCoordinateData] = useState<number[]>([]);
@@ -204,14 +206,14 @@ function useBLE(): BluetoothLowEnergyApi {
   }
   
 
-  const calculateDeadReckoning=()=>{
+  const calculateDeadReckoning= async ()=>{
     let pos_x=0.0;
     let pos_y=0.0;
     let pos_z=0.0;
   
     let curr_sum=0.0;
   
-  
+   
     for(let i=0;i<accel_data_buffer.storage.length;i+=1){
         let accel_x=accel_data_buffer.storage[i][0];
         let accel_y=accel_data_buffer.storage[i][1];
@@ -244,8 +246,29 @@ function useBLE(): BluetoothLowEnergyApi {
 
        return newData;
      })
+     
+    try {
+      const selectResponse: any = await database.getFirstAsync(
+        'SELECT max(gameID) from game_table'
+      )
+      console.log("---------game id is:", selectResponse)
+      if (selectResponse?.gameID) {
+      const response = await database.runAsync(
+        `INSERT INTO shot_table (
+      gameID,
+      ShotType,
+      ShotAngle,
+      ShotSpeed,
+      HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
+        [selectResponse?.gameID, state, "", "", 0]
+      )
+      console.log("-------------------------------------------------Item SHOT TABLE saved successfully:", response?.changes!);
+    };
 
-
+    } catch (error) {
+      console.error("Error saving item:", error);
+    }
+    
     console.log("dead reckoning: "+curr_sum);
   };
   
@@ -271,28 +294,28 @@ function useBLE(): BluetoothLowEnergyApi {
 
       setXAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[0]]; 
-        // if (newData.length > 9) newData.shift();
+        if (newData.length > 9) newData.shift();
         return newData;
       });
 
       setYAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[1]]; 
-        // if (newData.length > 9) newData.shift();
+        if (newData.length > 9) newData.shift();
         return newData;
       });
       setZAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[2]]; 
-        // if (newData.length > 9) newData.shift();
+        if (newData.length > 9) newData.shift();
         return newData;
       });
 
       setAccelCoordinateData((prevData) => {
         const newData = [...prevData, data];
-        // if (newData.length > 9) newData.shift();
+        if (newData.length > 9) newData.shift();
         return newData;
       });
 
-      console.log(xAccelCoordinateData.length, yAccelCoordinateData.length, zAccelCoordinateData.length)
+      // console.log(xAccelCoordinateData.length, yAccelCoordinateData.length, zAccelCoordinateData.length)
       
       if(data_count>0){
         accel_data_buffer.enqueue(data);
@@ -332,34 +355,27 @@ function useBLE(): BluetoothLowEnergyApi {
 
         setXGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[0]]; 
-          // if (newData.length > 9) newData.shift();
-        console.log("data gyro array", newData);
+          if (newData.length > 9) newData.shift();
+        // console.log("data gyro array", newData);
 
           return newData;
         });
 
         setYGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[1]]; 
-          // if (newData.length > 9) newData.shift();
+          if (newData.length > 9) newData.shift();
           return newData;
         });
         setZGyroCoordinateData((prevData)=>{
           const newData = [...prevData, data[2]]; 
-          // if (newData.length > 9) newData.shift();
+          if (newData.length > 9) newData.shift();
           return newData;
         });
         setGyroCoordinateData((prevData) => {
           const newData = [...prevData, data];
-          // if (newData.length > 9) newData.shift();
+          if (newData.length > 9) newData.shift();
           return newData;
         });
-
-              console.log(
-                xGyroCoordinateData.length,
-                yGyroCoordinateData.length,
-                zGyroCoordinateData.length
-              );
-
     }
       // console.log("Gyro Data: "+convertNetworkToAndroidEndian(binaryData.buffer))
     };

@@ -9,32 +9,8 @@ import { Colors } from "../../constants/Colors";
 import { useColorScheme } from "../../hooks/useColorScheme";
 
 
-export default async function TabLayout() {
+export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const db = await SQLite.openDatabaseAsync('gameDatabase');
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS game_data (
-        gameID INTEGER PRIMARY KEY NOT NULL,
-        Date DATETIME NOT NULL,
-        Gyro TEXT,
-        Mic TEXT,
-        Accel TEXT,
-        TotalShots INTEGER,
-        TotalShotsHit INTEGER,
-        DriveShots INTEGER,
-        DinkShots INTEGER,
-        DropShots INTEGER,
-        ServeShots INTEGER
-    );
-`);
-
-  // Check if the table exists
-  const result = await db.execAsync(`
-    SELECT name FROM sqlite_master WHERE type='table' AND name='game_data';
-  `);
-  console.log(result);
-
-    
   return (
     <Tabs
       screenOptions={{
