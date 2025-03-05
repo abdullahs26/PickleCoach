@@ -166,10 +166,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                           data: yAccelCoordinateData,
                           color: () => "#ED7C33",
                         },
-                        {
-                          data: zAccelCoordinateData,
-                          color: () => "#96ed33",
-                        },
+                  
                       ],
                     }}
                     width={Dimensions.get("window").width} // from react-native
@@ -220,10 +217,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                           data: yGyroCoordinateData,
                           color: () => "#ED7C33",
                         },
-                        {
-                          data: zGyroCoordinateData,
-                          color: () => "#96ed33",
-                        },
+                      
                       ],
                     }}
                     width={Dimensions.get("window").width} // from react-native

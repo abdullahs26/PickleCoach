@@ -1,14 +1,14 @@
 // App.js
-import React from "react";
-import { View, Text, StyleSheet, FlatList, ScrollView } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
+import React, {useState, useEffect} from "react";
+import { View, Text, StyleSheet, FlatList, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ShotDataModal from "../modal/shotsModal";
 
 type gameData = {
-  date: string;
-  location: string;
-  time: string;
-  accuracy: string;
-  shots: number;
+  gameID: number,
+  Date: string
 };
 
 type gameHistory = {
@@ -16,109 +16,154 @@ type gameHistory = {
   games: gameData[];
 };
 
-const data: gameHistory[] = [
-  {
-    month: "April",
-    games: [
-      {
-        date: "April 30, 2024",
-        location: "Waterloo, ON",
-        time: "18:27",
-        accuracy: "87%",
-        shots: 161,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-    ],
-  },
-  {
-    month: "April",
-    games: [
-      {
-        date: "April 30, 2024",
-        location: "Waterloo, ON",
-        time: "18:27",
-        accuracy: "87%",
-        shots: 161,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "April 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-    ],
-  },
-  {
-    month: "March",
-    games: [
-      {
-        date: "March 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "March 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-      {
-        date: "March 28, 2024",
-        location: "Waterloo, ON",
-        time: "12:27",
-        accuracy: "76%",
-        shots: 121,
-      },
-    ],
-  },
-];
+// const data: gameHistory[] = [
+  // {
+  //   month: "April",
+  //   games: [
+  //     {
+  //       date: "April 30, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "18:27",
+  //       accuracy: "87%",
+  //       shots: 161,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //   ],
+  // },
+  // {
+  //   month: "April",
+  //   games: [
+  //     {
+  //       date: "April 30, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "18:27",
+  //       accuracy: "87%",
+  //       shots: 161,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "April 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //   ],
+  // },
+  // {
+  //   month: "March",
+  //   games: [
+  //     {
+  //       date: "March 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "March 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //     {
+  //       date: "March 28, 2024",
+  //       location: "Waterloo, ON",
+  //       time: "12:27",
+  //       accuracy: "76%",
+  //       shots: 121,
+  //     },
+  //   ],
+  // },
+// ];
 
 const GameHistoryScreen = () => {
+  const [gameDataResult, setGameDataResult] = useState<gameData[]|null>([]);
+  const [gamesPlayed, setGamesPlayed] = useState<number|null>(0);
+  const [loading, setLoading] = useState<boolean>(true)
+  const [isShotsModalVisible, setIsShotsModalVisible] = useState<boolean>(false);
+  const database = useSQLiteContext();
+
+  const openShotsModal = async () => {
+      setIsShotsModalVisible(true);
+    };
+
+  const hideShotsModal = async () => {
+        setIsShotsModalVisible(false);
+    };
+
+    useFocusEffect(() => {
+    // Function to fetch data
+    const fetchData = async () => {
+      try {
+        console.log("insdieeeee")
+        const gameTableResult: gameData[] | null = await database.getAllAsync(`
+          SELECT * FROM game_table;
+        `);
+        const totalGamesResult: any | null = await database.getFirstAsync(`
+          SELECT count(*) as count FROM game_table;
+        `);
+        console.log("restult:", gameTableResult);
+        console.log("restult:", totalGamesResult?.count);
+
+        setGameDataResult(gameTableResult); // Update state with fetched data
+        setGamesPlayed(totalGamesResult?.count)
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false)
+      }
+    };
+
+    fetchData(); // Call the function
+  });
+
   const renderGameItem = ({ item }: { item: gameData }) => (
-    <View style={styles.gameItem}>
-      <Text style={styles.text}>{item.date}</Text>
-      <Text style={styles.text}>{item.location}</Text>
-      <Text style={styles.text}>{item.accuracy}</Text>
-      <Text style={styles.text}>{item.shots}</Text>
-    </View>
+    <>
+      <TouchableOpacity onPress={openShotsModal}>
+        <View style={styles.gameItem}>
+          <Text style={styles.text}>{item.Date}</Text>
+          {/* <Text style={styles.text}>{item.location}</Text>
+        <Text style={styles.text}>{item.accuracy}</Text>
+        <Text style={styles.text}>{item.shots}</Text> */}
+        </View>
+      </TouchableOpacity>
+      <ShotDataModal closeModal={hideShotsModal} visible={isShotsModalVisible} gameId={item.gameID}/>
+    </>
   );
 
   return (
@@ -129,20 +174,21 @@ const GameHistoryScreen = () => {
 
       <View style={styles.totalGamesContainer}>
         <Text style={styles.totalGamesText}>Total Games Played</Text>
-        <Text style={styles.totalGamesNumber}>591</Text>
+        <Text style={styles.totalGamesNumber}>{gamesPlayed}</Text>
       </View>
       <ScrollView>
-        {data.map((section, index) => (
-          <View key={index}>
-            <Text style={styles.monthHeader}>{section.month}</Text>
-            <FlatList
-              data={section.games}
-              renderItem={renderGameItem}
-              keyExtractor={(item, idx) => `${section.month}-${idx}`}
-              scrollEnabled={false}
-            />
-          </View>
-        ))}
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      {loading ? (
+        <ActivityIndicator size="large" color="green" />
+      ) : (
+        <FlatList
+          data={gameDataResult}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderGameItem}
+          scrollEnabled={false}
+        />
+      )}
+    </View>
       </ScrollView>
     </SafeAreaView>
   );
