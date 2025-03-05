@@ -1,5 +1,19 @@
-import React, {FC} from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import React, { FC, useCallback, useState } from "react";
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  ScrollView
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import Svg, { Rect } from "react-native-svg";
+import { useSQLiteContext } from "expo-sqlite";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 type ShotModalProps = {
   gameId: number
@@ -7,59 +21,169 @@ type ShotModalProps = {
   closeModal: () => void;
 };
 
-  const shotData = [
-    {
-      ShotType: "Drive",
-      ShotAngle: 45,
-      ShotSpeed: 120,
-      HeatMapLoc: "Top Right",
-    },
-    { ShotType: "Dink", ShotAngle: 30, ShotSpeed: 60, HeatMapLoc: "Center" },
-    {
-      ShotType: "Drop",
-      ShotAngle: 20,
-      ShotSpeed: 50,
-      HeatMapLoc: "Bottom Left",
-    },
-  ];
+type ShotResult = {
+      ShotType: number; 
+      ShotAngle: number;
+      ShotSpeed: number;
+      HeatMapLoc: number;
+}
+
+type ShotType = {
+    0: string;
+    1: string;
+    2: string;
+    3: string;
+}
+
 const ShotDataModal : FC<ShotModalProps> = (props) => {
-  const { visible, closeModal, gameId } = props;
+    const { visible, closeModal, gameId } = props;  
+    const database = useSQLiteContext();
+    const [heatMapLocations, setHeatMapLocations] = useState<number[]>([
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+  ]);
+    const [shotData, setShotData] = useState<any[]>([])
+    const [loading, setLoading] = useState<boolean>(true);
+
+    let hashmap = new Map<Number, string>();
+    hashmap.set(0,"Drop")
+    hashmap.set(1,"Dink")
+    hashmap.set(2,"Drive")
+    hashmap.set(3,"Serve")
+    
+
+    const generateHeatmapColors = (value: number) => {
+    // Ensure value stays within the range of 0 to 120
+    const clampedValue = Math.min(Math.max(value, 0), 25);
+
+    // Normalize the value to a range of 0 to 1 for opacity
+    const intensity = clampedValue / 25;
+
+    // Darker color means lower opacity (reversed intensity)
+    return `rgba(0, 199, 129, ${intensity})`;
+  };
+
+useFocusEffect(
+    useCallback(() => {
+      let isActive = true; // Track component mount status
+
+      const fetchData = async () => {
+        try {
+          const shotResult: ShotResult[] | null = await database.getAllAsync(
+            `SELECT * FROM shot_table WHERE gameID = ${gameId};`
+          );
+          console.log("GAME ID IS: ", shotResult);
+          if (!isActive) return; // Prevent state update if unmounted
+
+          const newHeatMap = { ...heatMapLocations }; // Create a new object to avoid state mutation
+          
+          shotResult.forEach((item: ShotResult) => {
+            let currentShotData: any = {
+              ShotType: "",
+              ShotAngle: 0,
+              ShotSpeed: 0,
+              HeatMapLoc: 0,
+            };
+            if (item.HeatMapLoc) {
+              newHeatMap[item.HeatMapLoc] =
+                (newHeatMap[item.HeatMapLoc] || 0) + 1;
+                currentShotData.HeatMapLoc = item.HeatMapLoc
+            }
+            
+              currentShotData.ShotType = hashmap.get(item.ShotType)!;
+            
+            if (item.ShotAngle) {
+                currentShotData.ShotAngle = 0
+            }
+            if (item.ShotSpeed) {
+                currentShotData.ShotSpeed = 0
+            }
+             setShotData((prevData) => {
+               const newData = [...prevData, currentShotData];
+               return newData;
+             });
+          });
+         
+          setHeatMapLocations(newHeatMap);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        isActive = false; // Prevent state updates after unmount
+      };
+    }, []) // Depend on gameId to re-run when it changes
+  );
+
+  const heatmapData = [
+    [heatMapLocations[0], heatMapLocations[1], heatMapLocations[2]],
+    [heatMapLocations[3], heatMapLocations[4], heatMapLocations[5]],
+    [heatMapLocations[6], heatMapLocations[7], heatMapLocations[8]],
+  ]; // Example intensity values for the heatmap
+  
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent = {false}
-    >
+    <Modal visible={visible} animationType="slide" transparent={false}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Shot Data</Text>
 
           {/* Table Header */}
-          <View style={styles.headerRow}>
-            <Text style={styles.headerText}>Type</Text>
-            <Text style={styles.headerText}>Angle</Text>
-            <Text style={styles.headerText}>Speed</Text>
-            <Text style={styles.headerText}>HeatMap</Text>
-          </View>
+          <ScrollView>
+            <View style={styles.headerRow}>
+              <Text style={styles.headerText}>Type</Text>
+              <Text style={styles.headerText}>Angle</Text>
+              <Text style={styles.headerText}>Speed</Text>
+              <Text style={styles.headerText}>HeatMap</Text>
+            </View>
+            {/* Table Rows */}
 
-          {/* Table Rows */}
-          <FlatList
-            data={shotData}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.row}>
-                <Text style={styles.cell}>{item.ShotType}</Text>
-                <Text style={styles.cell}>{item.ShotAngle}°</Text>
-                <Text style={styles.cell}>{item.ShotSpeed} km/h</Text>
-                <Text style={styles.cell}>{item.HeatMapLoc}</Text>
-              </View>
-            )}
-          />
+            <FlatList
+              data={shotData}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.row}>
+                  <Text style={styles.cell}>{item.ShotType}</Text>
+                  <Text style={styles.cell}>{item.ShotAngle}°</Text>
+                  <Text style={styles.cell}>{item.ShotSpeed} km/h</Text>
+                  <Text style={styles.cell}>{item.HeatMapLoc}</Text>
+                </View>
+              )}
+              scrollEnabled={false}
+            />
 
-          {/* Close Button */}
-          <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+            {/* Close Button */}
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+
+            {/* Heatmap Section */}
+            <View style={styles.heatmapContainer}>
+              <Text style={styles.sectionTitle}>Heat Map</Text>
+              <Svg
+                height="200"
+                width={Dimensions.get("window").width - 40}
+                viewBox="0 0 100 100"
+                style={styles.heatmap}
+              >
+                {heatmapData.map((row, rowIndex) =>
+                  row.map((value, colIndex) => (
+                    <Rect
+                      key={`${rowIndex}-${colIndex}`}
+                      x={(colIndex * 25).toString()}
+                      y={(rowIndex * 25).toString()}
+                      width="25"
+                      height="25"
+                      fill={generateHeatmapColors(value)}
+                    />
+                  ))
+                )}
+              </Svg>
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -125,6 +249,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "white",
     fontWeight: "bold",
+  },
+  heatmapContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  heatmap: {
+    borderWidth: 2,
+    borderColor: "#000000",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
   },
 });
 

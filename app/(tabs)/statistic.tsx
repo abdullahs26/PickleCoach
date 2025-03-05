@@ -17,11 +17,11 @@ type shotData = {
 
 const StatisticsScreen =  () => {
   const [totalShots, setTotalShots] = useState<number | null>(0);
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(true);
+  const database = useSQLiteContext();
   
   useFocusEffect(() => {
     const fetchData = async () => {
-        const database = useSQLiteContext();
         try {
           const totalShotsResult: any | null = await database.getFirstAsync(`
       SELECT count(*) as count FROM shot_table;
@@ -46,16 +46,22 @@ const StatisticsScreen =  () => {
   };
 
   const heatmapData = [
-    [1, -2, 3, -4],
-    [-1, 2, -3, 4],
-    [3, -1, -2, 1],
-    [-4, 3, -1, 2],
+    [10, 15, 30],
+    [5, 10, 41],
+    [4, 50, 100],
   ]; // Example intensity values for the heatmap
 
   const generateHeatmapColors = (value: number) => {
-    if (value > 0) return "rgba(0, 199, 129," + Math.abs(value / 4) + ")";
-    else return "rgba(255,82,82," + Math.abs(value / 4) + ")";
+    // Ensure value stays within the range of 0 to 120
+    const clampedValue = Math.min(Math.max(value, 0), 120);
+
+    // Normalize the value to a range of 0 to 1 for opacity
+    const intensity = clampedValue / 120;
+
+    // Darker color means lower opacity (reversed intensity)
+    return `rgba(0, 199, 129, ${intensity})`;
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,7 +92,7 @@ const StatisticsScreen =  () => {
                 },
               ],
             }}
-            width={Dimensions.get("window").width - 40} // Chart width
+            width={Dimensions.get("window").width} // Chart width
             height={220} // Chart height
             yAxisLabel="" // Prefix for Y-axis labels (e.g., "$")
             yAxisSuffix="" // Suffix for Y-axis labels (e.g., "k")
@@ -179,7 +185,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle:{
   fontSize: 20, fontWeight:"bold",color:"#333",marginBottom: 10
-
   },
   barChart:{
   borderRadius: 8 
@@ -187,7 +192,6 @@ const styles = StyleSheet.create({
   },
   heatmapContainer:{
   alignItems:"center", marginBottom: 30
-
   }
 
 });

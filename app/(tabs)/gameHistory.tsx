@@ -116,10 +116,13 @@ const GameHistoryScreen = () => {
   const [gamesPlayed, setGamesPlayed] = useState<number|null>(0);
   const [loading, setLoading] = useState<boolean>(true)
   const [isShotsModalVisible, setIsShotsModalVisible] = useState<boolean>(false);
+  const [currentGameId, setCurrentGameId] = useState<number>(0);
   const database = useSQLiteContext();
 
-  const openShotsModal = async () => {
+  const openShotsModal =  (gameId: number) => {
+      console.log("in here")
       setIsShotsModalVisible(true);
+      setCurrentGameId(gameId)
     };
 
   const hideShotsModal = async () => {
@@ -130,15 +133,15 @@ const GameHistoryScreen = () => {
     // Function to fetch data
     const fetchData = async () => {
       try {
-        console.log("insdieeeee")
+        // console.log("insdieeeee")
         const gameTableResult: gameData[] | null = await database.getAllAsync(`
           SELECT * FROM game_table;
         `);
         const totalGamesResult: any | null = await database.getFirstAsync(`
           SELECT count(*) as count FROM game_table;
         `);
-        console.log("restult:", gameTableResult);
-        console.log("restult:", totalGamesResult?.count);
+        // console.log("restult:", gameTableResult);
+        // console.log("restult:", totalGamesResult?.count);
 
         setGameDataResult(gameTableResult); // Update state with fetched data
         setGamesPlayed(totalGamesResult?.count)
@@ -154,15 +157,12 @@ const GameHistoryScreen = () => {
 
   const renderGameItem = ({ item }: { item: gameData }) => (
     <>
-      <TouchableOpacity onPress={openShotsModal}>
+      <TouchableOpacity onPress={() => openShotsModal(item.gameID)}>
         <View style={styles.gameItem}>
+          <Text style={styles.text}>{item.gameID} --- </Text>
           <Text style={styles.text}>{item.Date}</Text>
-          {/* <Text style={styles.text}>{item.location}</Text>
-        <Text style={styles.text}>{item.accuracy}</Text>
-        <Text style={styles.text}>{item.shots}</Text> */}
         </View>
       </TouchableOpacity>
-      <ShotDataModal closeModal={hideShotsModal} visible={isShotsModalVisible} gameId={item.gameID}/>
     </>
   );
 
@@ -176,19 +176,29 @@ const GameHistoryScreen = () => {
         <Text style={styles.totalGamesText}>Total Games Played</Text>
         <Text style={styles.totalGamesNumber}>{gamesPlayed}</Text>
       </View>
-      <ScrollView>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      {loading ? (
-        <ActivityIndicator size="large" color="green" />
-      ) : (
-        <FlatList
-          data={gameDataResult}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderGameItem}
-          scrollEnabled={false}
+      {isShotsModalVisible && (
+        <ShotDataModal
+          closeModal={hideShotsModal}
+          visible={isShotsModalVisible}
+          gameId={currentGameId}
         />
       )}
-    </View>
+
+      <ScrollView>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          {loading ? (
+            <ActivityIndicator size="large" color="green" />
+          ) : (
+            <FlatList
+              data={gameDataResult}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderGameItem}
+              scrollEnabled={false}
+            />
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

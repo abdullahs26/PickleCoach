@@ -244,7 +244,7 @@ function useBLE(): BluetoothLowEnergyApi {
     }else if(curr_sum>130){
       state=1;
     }
-
+    console.log("CURR SUM: ", curr_sum);
 
     setDeadReckoning((prevData) => {
        const newData = [...prevData, state];
@@ -256,21 +256,25 @@ function useBLE(): BluetoothLowEnergyApi {
      
     try {
       const selectResponse: any = await database.getFirstAsync(
-        'SELECT max(gameID) from game_table'
+        'SELECT max(gameID) as maxGameID from game_table'
       )
       console.log("---------game id is:", selectResponse)
-      if (selectResponse?.gameID) {
-      const response = await database.runAsync(
-        `INSERT INTO shot_table (
+      if (selectResponse?.maxGameID) {
+        const response = await database.runAsync(
+          `INSERT INTO shot_table (
       gameID,
       ShotType,
       ShotAngle,
       ShotSpeed,
       HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
-        [selectResponse?.gameID, state, "", "", grid_spot]
-      )
-      console.log("-------------------------------------------------Item SHOT TABLE saved successfully:", response?.changes!);
-    };
+          [selectResponse?.maxGameID, state, "", "", grid_spot]
+        );
+        console.log("GRID:  ", grid_spot);
+        console.log(
+          "-------------------------------------------------Item SHOT TABLE saved successfully:",
+          response?.changes!
+        );
+      };
 
     } catch (error) {
       console.error("Error saving item:", error);

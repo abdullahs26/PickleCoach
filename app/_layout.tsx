@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { useColorScheme } from '../hooks/useColorScheme';
+import ShotDataModal from './modal/shotsModal';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -52,8 +53,12 @@ const createDbIfNeeded = async (db: SQLiteDatabase) => {
   );
 `
   );
+  const shotResult: db | null = await db.getFirstAsync(`
+  SELECT * FROM shot_table;
+`);
   console.log("Shot Table created", responseShotTable);
     console.log("db returns", result);
+    console.log("shot result", shotResult);
   } catch (error) {
     console.error("Error creating database:", error);
   }
