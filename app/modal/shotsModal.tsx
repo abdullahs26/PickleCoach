@@ -48,7 +48,7 @@ const ShotDataModal : FC<ShotModalProps> = (props) => {
     hashmap.set(0,"Drop")
     hashmap.set(1,"Dink")
     hashmap.set(2,"Drive")
-    hashmap.set(3,"Serve")
+    hashmap.set(3,"Smash")
     
 
     const generateHeatmapColors = (value: number) => {
@@ -92,10 +92,10 @@ useFocusEffect(
               currentShotData.ShotType = hashmap.get(item.ShotType)!;
             
             if (item.ShotAngle) {
-                currentShotData.ShotAngle = 0
+                currentShotData.ShotAngle = item.ShotAngle
             }
             if (item.ShotSpeed) {
-                currentShotData.ShotSpeed = 0
+                currentShotData.ShotSpeed = item.ShotSpeed
             }
              setShotData((prevData) => {
                const newData = [...prevData, currentShotData];
@@ -136,7 +136,7 @@ useFocusEffect(
             <View style={styles.headerRow}>
               <Text style={styles.headerText}>Type</Text>
               <Text style={styles.headerText}>Angle</Text>
-              <Text style={styles.headerText}>Speed</Text>
+              <Text style={styles.headerText}>Shot Force</Text>
               <Text style={styles.headerText}>HeatMap</Text>
             </View>
             {/* Table Rows */}
@@ -147,8 +147,8 @@ useFocusEffect(
               renderItem={({ item }) => (
                 <View style={styles.row}>
                   <Text style={styles.cell}>{item.ShotType}</Text>
-                  <Text style={styles.cell}>{item.ShotAngle}°</Text>
-                  <Text style={styles.cell}>{item.ShotSpeed} km/h</Text>
+                  <Text style={styles.cell}>{item.ShotAngle.toFixed(2)}°</Text>
+                  <Text style={styles.cell}>{item.ShotSpeed.toFixed(2)} m/s^2</Text>
                   <Text style={styles.cell}>{item.HeatMapLoc}</Text>
                 </View>
               )}
@@ -163,25 +163,26 @@ useFocusEffect(
             {/* Heatmap Section */}
             <View style={styles.heatmapContainer}>
               <Text style={styles.sectionTitle}>Heat Map</Text>
-              <Svg
-                height="200"
-                width={Dimensions.get("window").width - 40}
-                viewBox="0 0 100 100"
-                style={styles.heatmap}
-              >
-                {heatmapData.map((row, rowIndex) =>
-                  row.map((value, colIndex) => (
-                    <Rect
-                      key={`${rowIndex}-${colIndex}`}
-                      x={(colIndex * 25).toString()}
-                      y={(rowIndex * 25).toString()}
-                      width="25"
-                      height="25"
-                      fill={generateHeatmapColors(value)}
-                    />
-                  ))
-                )}
-              </Svg>
+                <Svg
+                  height="200"
+                  width={Dimensions.get("window").width - 20}
+                  viewBox="0 0 75 75"
+                >
+                  {heatmapData.map((row, rowIndex) =>
+                    row.map((value, colIndex) => (
+                      <Rect
+                        key={`${rowIndex}-${colIndex}`}
+                        x={(colIndex * 25).toString()}
+                        y={(rowIndex * 25).toString()}
+                        width="25"
+                        height="25"
+                        fill={generateHeatmapColors(value)}
+                        stroke="black"
+                        strokeWidth="0.5"
+                      />
+                    ))
+                  )}
+                </Svg>
             </View>
           </ScrollView>
         </View>
@@ -252,11 +253,13 @@ const styles = StyleSheet.create({
   },
   heatmapContainer: {
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 30,
   },
-  heatmap: {
-    borderWidth: 2,
-    borderColor: "#000000",
+  heatmapBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 30,
   },
   sectionTitle: {
     fontSize: 20,

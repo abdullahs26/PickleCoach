@@ -118,7 +118,7 @@ const StatisticsScreen =  () => {
           <Svg
             height="200"
             width={Dimensions.get("window").width - 40}
-            viewBox="0 0 100 100"
+            viewBox="0 0 75 75"
           >
             {heatmapData.map((row, rowIndex) =>
               row.map((value, colIndex) => (

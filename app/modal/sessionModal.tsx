@@ -1,22 +1,48 @@
 import React, { useState, useEffect, FC } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Dimensions,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LineChart } from "react-native-chart-kit";
+import SkiaAccelChart from "../helper/skiaLineChart";
+import SkiaLineChart from "../helper/skiaLineChart";
 
 type SessionModalProps = {
   visible: boolean;
   closeModal: () => void;
+  xAccelCoordinateData: any[];
+  xGyroCoordinateData: any[];
+  yAccelCoordinateData: any[];
+  yGyroCoordinateData: any[];
+  zAccelCoordinateData: any[];
+  zGyroCoordinateData: any[];
 };
 
-const SessionModal : FC<SessionModalProps>  = (props) => {
-  const { visible, closeModal } = props;
+const SessionModal: FC<SessionModalProps> = (props) => {
+  const {
+    visible,
+    closeModal,
+    xAccelCoordinateData,
+    xGyroCoordinateData,
+    yAccelCoordinateData,
+    yGyroCoordinateData,
+    zAccelCoordinateData,
+    zGyroCoordinateData,
+  } = props;
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
 
   const closeSession = () => {
-    setRunning(false)
-    setSeconds(0)
-    closeModal()
-  }
+    setRunning(false);
+    setSeconds(0);
+    closeModal();
+  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -48,43 +74,79 @@ const SessionModal : FC<SessionModalProps>  = (props) => {
   };
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={false}
-      visible={visible}
-    >
+    <Modal animationType="slide" transparent={false} visible={visible}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Session Timer</Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Session Timer</Text>
+          </View>
 
-        {/* Timer Display */}
-        <View style={styles.card}>
-          <Text style={styles.timerText}>{formatTime(seconds)}</Text>
-          <TouchableOpacity
-            style={styles.stopButton}
-            onPress={closeSession}
-            disabled={!running}
-          >
-            <Text style={styles.stopButtonText}>Stop Session</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Timer Display */}
+          <View style={styles.card}>
+            <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+            <TouchableOpacity
+              style={styles.stopButton}
+              onPress={closeSession}
+              disabled={!running}
+            >
+              <Text style={styles.stopButtonText}>Stop Session</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Accelerometer Data */}
+          {xAccelCoordinateData.length !== 0 &&
+            yAccelCoordinateData.length !== 0 &&
+            zAccelCoordinateData.length !== 0 && (
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>Accelerometer Data</Text>
+                <SkiaLineChart
+                  xAccelCoordinateData={xAccelCoordinateData}
+                  yAccelCoordinateData={yAccelCoordinateData}
+                />
+              </View>
+            )}
+
+          {/* Gyroscope Data */}
+          {xGyroCoordinateData.length !== 0 &&
+            yGyroCoordinateData.length !== 0 &&
+            zGyroCoordinateData.length !== 0 && (
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>Gyroscope Data</Text>
+                <SkiaLineChart
+                  xAccelCoordinateData={xGyroCoordinateData}
+                  yAccelCoordinateData={yGyroCoordinateData}
+                />
+              </View>
+            )}
+        </ScrollView>
       </SafeAreaView>
     </Modal>
   );
 };
 
+const chartConfig = {
+  backgroundColor: "#e26a00",
+  backgroundGradientFrom: "#fb8c00",
+  backgroundGradientTo: "#ffa726",
+  decimalPlaces: 2,
+  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  style: { borderRadius: 16 },
+  propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#00C781", // Green background like the image
+    backgroundColor: "#00C781",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
     alignItems: "center",
-    justifyContent: "center",
   },
   header: {
-    position: "absolute",
-    top: 0,
     width: "100%",
     padding: 20,
     alignItems: "center",
@@ -105,6 +167,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+    marginVertical: 15,
   },
   timerText: {
     fontSize: 40,
@@ -123,6 +186,24 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  chartContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+    marginVertical: 10,
+    marginHorizontal: 20,
+    borderRadius: 10,
+    elevation: 3,
+    width: "90%",
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  chart: {
+    borderRadius: 10,
   },
 });
 

@@ -230,22 +230,37 @@ function useBLE(): BluetoothLowEnergyApi {
   
         curr_sum+=d;
     }
+
+    let shortForce=Math.sqrt(hitAccel[0]**2+hitAccel[1]**2+hitAccel[2]**2)-9.81;
+          console.log("---------------------short accel--------------- ", shortForce, "hit accwel ", hitAccel);
+
     /*
     state 0 is drop
     state 1 is dink
     state 2 is drive
     state 3 is smash
+
+
+    0.947 still
+    1.065 dink
+    0.098
+    1.238
+    1.02
+
+    .96
+    1.0
+    1.1
     */
     let state=0;
-    if (curr_sum>165){
+    if (curr_sum>=1.1){
       state=3;
-    }else if(curr_sum>150){
+    }else if(curr_sum>1.0){
       state=2;
-    }else if(curr_sum>130){
+    }else if(curr_sum>.96){
       state=1;
     }
     console.log("CURR SUM: ", curr_sum);
-
+    console.log(shortForce);
     setDeadReckoning((prevData) => {
        const newData = [...prevData, state];
        // if (newData.length > 9) newData.shift();
@@ -267,7 +282,7 @@ function useBLE(): BluetoothLowEnergyApi {
       ShotAngle,
       ShotSpeed,
       HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
-          [selectResponse?.maxGameID, state, "", "", grid_spot]
+          [selectResponse?.maxGameID, state, lastGyro[0], shortForce, grid_spot]
         );
         console.log("GRID:  ", grid_spot);
         console.log(
@@ -301,7 +316,8 @@ function useBLE(): BluetoothLowEnergyApi {
         c.charCodeAt(0)
       );
       let data=convertNetworkToAndroidEndian(binaryData.buffer)
-  
+        lastAccel = data;
+
 
       setXAccelCoordinateData(prevData=>{
         const newData = [...prevData, data[0]]; 
@@ -423,7 +439,6 @@ function useBLE(): BluetoothLowEnergyApi {
     
           hitGyro=lastGyro;
           hitAccel=lastAccel;
-  
           var input= new Matrix([
             [binaryData[0]],
             [binaryData[1]],
