@@ -1,17 +1,43 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { View, Text, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { useSQLiteContext } from "expo-sqlite";
 import * as Progress from "react-native-progress";
 import { BarChart } from "react-native-chart-kit";
 import Svg, { Rect } from "react-native-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const StatisticsScreen = () => {
-  const totalShots = 2067;
-  const totalMissed = 98;
-  const accuracy = (totalShots / (totalShots + totalMissed)) * 100;
+type shotData = {
+  gameID: number,
+  ShotType: string,
+  ShotAngle: number,
+  ShotSpeed: number,
+  HeatMapLoc: number
+};
+
+const StatisticsScreen =  () => {
+  const [totalShots, setTotalShots] = useState<number | null>(0);
+  const [loading, setLoading] = useState<boolean>(true)
+  
+  useFocusEffect(() => {
+    const fetchData = async () => {
+        const database = useSQLiteContext();
+        try {
+          const totalShotsResult: any | null = await database.getFirstAsync(`
+      SELECT count(*) as count FROM shot_table;
+    `);
+          setTotalShots(totalShotsResult?.count);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setLoading(false)
+        }
+    }
+    fetchData()
+  })
 
   const commonShotsData = {
-    labels: ["Drive", "Dink", "Drop", "Serve"],
+    labels: ["Drive", "Dink", "Drop", "Smash"],
     datasets: [
       {
         data: [15000, 3000, 12000, 7000], // Dummy data for shots hit
@@ -38,26 +64,15 @@ const StatisticsScreen = () => {
         <Text style={styles.headerTitle}>Player Statistics</Text>
       </View>
       <ScrollView style={styles.container}>
-
         {/* Total Shots Section */}
-        <View style={styles.totalShotsContainer}>
-          <Text style={styles.totalShotsText}>Total Shots Hit</Text>
-          <Text style={styles.totalShotsNumber}>{totalShots}</Text>
-          <Text style={styles.totalShotsText}>Total Shots Missed</Text>
-          <Text style={styles.totalShotsNumber}>{totalMissed}</Text>
-          <Progress.Bar
-            progress={accuracy / 100}
-            width={Dimensions.get("window").width * 0.8}
-            color="#00C781"
-            unfilledColor="#ddd"
-            borderWidth={0}
-            height={10}
-            style={{ marginVertical: 10 }}
-          />
-          <Text style={styles.progressBarLabel}>
-            {accuracy.toFixed(1)}% Accuracy
-          </Text>
-        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="green" />
+        ) : (
+          <View style={styles.totalShotsContainer}>
+            <Text style={styles.totalShotsText}>Total Shots Hit</Text>
+            <Text style={styles.totalShotsNumber}>{totalShots}</Text>
+          </View>
+        )}
 
         {/* Common Shots Section */}
         <View style={styles.chartContainer}>
