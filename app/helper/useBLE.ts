@@ -11,6 +11,7 @@ import * as ExpoDevice from "expo-device";
 import base64 from "react-native-base64";
 import { FlatList } from "react-native-gesture-handler";
 import { useSQLiteContext } from "expo-sqlite";
+import { Matrix } from 'ml-matrix';
 
 // TODO: get uuid and characteristic of paddle
 const PADDLE_UUID = "181A";
@@ -48,7 +49,11 @@ interface BluetoothLowEnergyApi {
   deadReckoning: number[];
   micData: number[];
 }
- 
+var weights=new Matrix([
+  [ -0.03732711,  0.07081579, -0.35808101,  0.37382012],
+  [-0.60724952, -0.43700612,  0.4213935,  0.34715349]
+]);
+let location=new Matrix([]);
 class Queue{
   public storage: number[][]=[];
   constructor(private capacity: number = 10) {}
@@ -75,6 +80,8 @@ let lastGyro:number[]=[];
 let lastAccel:number[]=[];
 let hitGyro:number[]=[];
 let hitAccel:number[]=[];
+let last_mic_time=Date.now();
+let grid_spot=0
 
 function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
@@ -260,7 +267,7 @@ function useBLE(): BluetoothLowEnergyApi {
       ShotAngle,
       ShotSpeed,
       HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
-        [selectResponse?.gameID, state, "", "", 0]
+        [selectResponse?.gameID, state, "", "", grid_spot]
       )
       console.log("-------------------------------------------------Item SHOT TABLE saved successfully:", response?.changes!);
     };
@@ -398,14 +405,63 @@ function useBLE(): BluetoothLowEnergyApi {
       );
   
       if(binaryData.toString()!=prev_mic_data){
-        data_count=10;
-        accel_data_buffer.storage=[];
-        prev_mic_data=binaryData.toString();
-        console.log("MIC DATA: "+binaryData);
+
+
+        // let curr_time=Date.now();
+        // console.log(curr_time.toString(), " ", last_mic_time.toString(), " diff  ", curr_time-last_mic_time);
+        // if ((curr_time-last_mic_time)<500){
+        //   last_mic_time=curr_time;
+        //   // data_count=0;
+        // }
+        // else{
+          console.log("reach in the mic");
+          // last_mic_time=curr_time;
+          data_count=10;
+
+          accel_data_buffer.storage=[];
+          prev_mic_data=binaryData.toString();
+          // console.log("MIC DATA: "+binaryData);
+    
+          hitGyro=lastGyro;
+          hitAccel=lastAccel;
   
-        hitGyro=lastGyro;
-        hitAccel=lastAccel;
-      }
+          var input= new Matrix([
+            [binaryData[0]],
+            [binaryData[1]],
+            [binaryData[2]],
+            [binaryData[3]]
+          ]);
+  
+          location=weights.mmul(input);
+          if (location.get(0,0)<=-2&&location.get(1,0)>=2.6){
+              grid_spot=0;
+          }else if(location.get(0,0)<=2&&location.get(1,0)>=2.6){
+            grid_spot=1;
+          }else if(location.get(0,0)<=6&&location.get(1,0)>=2.6){
+            grid_spot=2;
+          }else if(location.get(0,0)<=-2&&location.get(1,0)>=-2.6){
+            grid_spot=3;
+          }else if(location.get(0,0)<=2&&location.get(1,0)>=-2.6){
+            grid_spot=4;
+          }else if(location.get(0,0)<=6&&location.get(1,0)>=-2.6){
+            grid_spot=5;
+          }else if(location.get(0,0)<=-2&&location.get(1,0)>=-8){
+            grid_spot=6;
+          }else if(location.get(0,0)<=2&&location.get(1,0)>=-8){
+            grid_spot=7;
+          }else{
+            grid_spot=8;
+          }
+          console.log("LOCATION: " + grid_spot);
+        }
+  
+
+
+
+
+
+  
+      // }
   
   
       // let val = binaryData[0];
