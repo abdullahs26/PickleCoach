@@ -11,106 +11,6 @@ type gameData = {
   Date: string
 };
 
-type gameHistory = {
-  month: string;
-  games: gameData[];
-};
-
-// const data: gameHistory[] = [
-  // {
-  //   month: "April",
-  //   games: [
-  //     {
-  //       date: "April 30, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "18:27",
-  //       accuracy: "87%",
-  //       shots: 161,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //   ],
-  // },
-  // {
-  //   month: "April",
-  //   games: [
-  //     {
-  //       date: "April 30, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "18:27",
-  //       accuracy: "87%",
-  //       shots: 161,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "April 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //   ],
-  // },
-  // {
-  //   month: "March",
-  //   games: [
-  //     {
-  //       date: "March 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "March 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //     {
-  //       date: "March 28, 2024",
-  //       location: "Waterloo, ON",
-  //       time: "12:27",
-  //       accuracy: "76%",
-  //       shots: 121,
-  //     },
-  //   ],
-  // },
-// ];
-
 const GameHistoryScreen = () => {
   const [gameDataResult, setGameDataResult] = useState<gameData[]|null>([]);
   const [gamesPlayed, setGamesPlayed] = useState<number|null>(0);
@@ -155,16 +55,15 @@ const GameHistoryScreen = () => {
     fetchData(); // Call the function
   });
 
-  const renderGameItem = ({ item }: { item: gameData }) => (
-    <>
-      <TouchableOpacity onPress={() => openShotsModal(item.gameID)}>
-        <View style={styles.gameItem}>
-          <Text style={styles.text}>{item.gameID} --- </Text>
-          <Text style={styles.text}>{item.Date}</Text>
-        </View>
-      </TouchableOpacity>
-    </>
-  );
+const renderGameItem = ({ item }: { item: gameData }) => (
+  <View style={styles.gameItem}>
+    <Text style={styles.text}>{item.gameID} - </Text>
+    <TouchableOpacity onPress={() => openShotsModal(item.gameID)}>
+      <Text style={[styles.text, styles.clickableText]}>{item.Date}</Text>
+    </TouchableOpacity>
+  </View>
+);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -256,6 +155,10 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 14,
     color: "#333",
+  },
+  clickableText: {
+    color: "#007BFF", // Change color to indicate it's clickable
+    textDecorationLine: "underline",
   },
 });
 
