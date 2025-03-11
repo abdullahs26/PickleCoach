@@ -79,28 +79,31 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
     useFocusEffect(() => {
     // Function to fetch data
     const fetchData = async () => {
-      try {
-        // console.log("insdieeeee")
-        const gameTableResult: gameData | null = await database.getFirstAsync(`
+      if (connectedDevice) {
+        try {
+          // console.log("insdieeeee")
+          const gameTableResult: gameData | null =
+            await database.getFirstAsync(`
           SELECT * FROM game_table
           WHERE gameID = (SELECT MAX(gameID) FROM game_table);
         `);
-        const totalGamesResult: any | null = await database.getFirstAsync(`
+          const totalGamesResult: any | null = await database.getFirstAsync(`
           SELECT count(*) as count FROM game_table;
         `);
-        // console.log("restult:", gameTableResult);
-        // console.log("restult:", totalGamesResult?.count);
+          // console.log("restult:", gameTableResult);
+          // console.log("restult:", totalGamesResult?.count);
 
-        setGameDataResult(gameTableResult); // Update state with fetched data
-        setGamesPlayed(totalGamesResult?.count)
-        const totalShotsResult: any | null = await database.getFirstAsync(`
-          SELECT count(*) as count FROM shot_table WHERE gameID=${gameDataResult?.gameID};
+          setGameDataResult(gameTableResult); // Update state with fetched data
+          setGamesPlayed(totalGamesResult?.count);
+          const totalShotsResult: any | null = await database.getFirstAsync(`
+          SELECT count(*) as count FROM shot_table WHERE gameID=${gameTableResult?.gameID};
         `);
-        setShots(totalShotsResult?.count);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false)
+          setShots(totalShotsResult?.count);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
