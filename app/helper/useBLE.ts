@@ -57,7 +57,7 @@ var weights=new Matrix([
 let location=new Matrix([]);
 class Queue{
   public storage: number[][]=[];
-  constructor(private capacity: number = 5) {}
+  constructor(private capacity: number = 10) {}
 
   enqueue(item: number[]){
     if(this.storage.length==this.capacity){
@@ -444,7 +444,7 @@ function useBLE(): BluetoothLowEnergyApi {
         if ((curr_time-last_mic_time)>500){
           // data_count=0;
           last_mic_time=curr_time;
-          data_count=5;
+          data_count=10;
 
           accel_data_buffer.storage=[];
           prev_mic_data=binaryData.toString();
