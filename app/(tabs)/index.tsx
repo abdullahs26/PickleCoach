@@ -112,6 +112,16 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
     fetchData(); // Call the function
   });
+
+  useEffect(() => {
+    console.log("in the effect");
+    if (connectedDevice) {
+      setIsDeviceConnected(true);
+      setTimeout(() => {
+        setIsDeviceConnected(false);
+      }, 10000);
+    }
+  }, [connectedDevice]);
   
   if (isDeviceConnected) {
     return (

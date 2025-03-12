@@ -83,10 +83,13 @@ useFocusEffect(
               ShotSpeed: 0,
               HeatMapLoc: 0,
             };
-            if (item.HeatMapLoc) {
+            if (item.HeatMapLoc != null) {
+              console.log(item.HeatMapLoc)
               newHeatMap[item.HeatMapLoc] =
                 (newHeatMap[item.HeatMapLoc] || 0) + 1;
                 currentShotData.HeatMapLoc = item.HeatMapLoc
+               console.log(newHeatMap);
+
             }
             
               currentShotData.ShotType = hashmap.get(item.ShotType)!;
