@@ -263,13 +263,28 @@ function useBLE(): BluetoothLowEnergyApi {
     1.1
     */
     let state=0;
-    if (curr_sum>=10){
-      state=3;
-    }else if(curr_sum>0.5){
-      state=2;
-    }else if(curr_sum>.45){
-      state=1;
-    }
+
+
+    /*
+    drive 
+
+    */
+   
+    // if (curr_sum>=10){
+    //   state=3;
+    // }else if(curr_sum>0.5){
+    //   state=2;
+    // }else if(curr_sum>.45){
+    //   state=1;
+    // }
+
+        if (curr_sum >= 8.0) {
+          state = 3;
+        } else if (curr_sum >= .95) {
+          state = 2;
+        } else if (curr_sum >= 0.90) {
+          state = 1;
+        }
     console.log("CURR SUM: ", curr_sum);
     console.log(shortForce);
     setDeadReckoning((prevData) => {
@@ -443,6 +458,7 @@ function useBLE(): BluetoothLowEnergyApi {
         let curr_time=Date.now();
         if ((curr_time-last_mic_time)>500){
           // data_count=0;
+          console.log("IN Da micccc da phonee");
           last_mic_time=curr_time;
           data_count=10;
 
