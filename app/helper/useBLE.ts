@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PermissionsAndroid, Platform } from "react-native";
 import {
   BleError,
@@ -36,6 +36,7 @@ interface BluetoothLowEnergyApi {
   scanForPeripherals(): void;
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
+  setState: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
   xGyroCoordinateData: number[];
@@ -56,7 +57,7 @@ var weights=new Matrix([
 let location=new Matrix([]);
 class Queue{
   public storage: number[][]=[];
-  constructor(private capacity: number = 10) {}
+  constructor(private capacity: number = 5) {}
 
   enqueue(item: number[]){
     if(this.storage.length==this.capacity){
@@ -98,8 +99,18 @@ function useBLE(): BluetoothLowEnergyApi {
   const [accelCoordinateData, setAccelCoordinateData] = useState<number[][]>([]);
   const [deadReckoning, setDeadReckoning]= useState<number[]>([]);
   const [micData, setMicData] = useState<number[]>([])
+  const [isSessionStarted, setIsSessionStarted] = useState<boolean>(false)
+  const isSessionStartedRef = useRef(isSessionStarted)
   // const [lastGyro,setLastGyroData]=useState<number[]>([]);
   // const [lastAccel,setLastAcelData]=useState<number[]>([]);
+
+  useEffect(() => {
+    isSessionStartedRef.current = isSessionStarted;
+  }, [isSessionStarted]);
+
+  const setState = () => {
+    setIsSessionStarted(!isSessionStarted)
+  }
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -252,11 +263,11 @@ function useBLE(): BluetoothLowEnergyApi {
     1.1
     */
     let state=0;
-    if (curr_sum>=1.1){
+    if (curr_sum>=10){
       state=3;
-    }else if(curr_sum>1.0){
+    }else if(curr_sum>0.5){
       state=2;
-    }else if(curr_sum>.96){
+    }else if(curr_sum>.45){
       state=1;
     }
     console.log("CURR SUM: ", curr_sum);
@@ -268,32 +279,34 @@ function useBLE(): BluetoothLowEnergyApi {
 
        return newData;
      })
-     
-    try {
-      const selectResponse: any = await database.getFirstAsync(
-        'SELECT max(gameID) as maxGameID from game_table'
-      )
-      console.log("---------game id is:", selectResponse)
-      if (selectResponse?.maxGameID) {
-        const response = await database.runAsync(
-          `INSERT INTO shot_table (
-      gameID,
-      ShotType,
-      ShotAngle,
-      ShotSpeed,
-      HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
-          [selectResponse?.maxGameID, state, lastGyro[0], shortForce, grid_spot]
+    console.log("there it is",isSessionStartedRef.current)
+    if (isSessionStartedRef.current) {
+      try {
+        const selectResponse: any = await database.getFirstAsync(
+          "SELECT max(gameID) as maxGameID from game_table"
         );
-        console.log("GRID:  ", grid_spot);
-        console.log(
-          "-------------------------------------------------Item SHOT TABLE saved successfully:",
-          response?.changes!
-        );
-      };
-
-    } catch (error) {
-      console.error("Error saving item:", error);
+        console.log("---------game id is:", selectResponse);
+        if (selectResponse?.maxGameID) {
+          const response = await database.runAsync(
+            `INSERT INTO shot_table (
+          gameID,
+          ShotType,
+          ShotAngle,
+          ShotSpeed,
+          HeatMapLoc ) VALUES (?, ?, ?, ?, ?)`,
+            [selectResponse?.maxGameID, state, lastGyro[0], shortForce, grid_spot]
+          );
+          console.log("GRID:  ", grid_spot);
+          console.log(
+            "-------------------------------------------------Item SHOT TABLE saved successfully:",
+            response?.changes!
+          );
+        }
+      } catch (error) {
+        console.error("Error saving item:", error);
+      }
     }
+  
     
     console.log("dead reckoning: "+curr_sum);
   };
@@ -431,7 +444,7 @@ function useBLE(): BluetoothLowEnergyApi {
         if ((curr_time-last_mic_time)>500){
           // data_count=0;
           last_mic_time=curr_time;
-          data_count=10;
+          data_count=5;
 
           accel_data_buffer.storage=[];
           prev_mic_data=binaryData.toString();
@@ -510,6 +523,7 @@ function useBLE(): BluetoothLowEnergyApi {
     scanForPeripherals,
     requestPermissions,
     connectToDevice,
+    setState,
     allDevices,
     connectedDevice,
     disconnectFromDevice,

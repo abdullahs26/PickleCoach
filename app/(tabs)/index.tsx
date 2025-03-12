@@ -24,6 +24,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
       scanForPeripherals,
       allDevices,
       connectToDevice,
+      setState,
       connectedDevice,
       disconnectFromDevice,
       xAccelCoordinateData,
@@ -61,10 +62,12 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
     const hideSessionModal = async () => {
         setIsSessionModalVisible(false);
+        setState();
     };
 
     const openSessionModal = async () => {
       setIsSessionModalVisible(true);
+      setState();
           try {
             const response = await database.runAsync(
               `INSERT INTO game_table (
